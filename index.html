@@ -159,6 +159,40 @@ tr+tr td{border-top:2px solid var(--line)}
 .kb{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:10px 0}
 .kb button{min-height:42px;border-radius:10px;border:0;background:var(--bg);font:600 18px 'Fredoka',sans-serif;cursor:pointer;color:var(--ink);box-shadow:0 3px 0 var(--line)}
 .kb button.found{background:var(--good);color:#fff}.kb button.absent{background:var(--line);opacity:.5}.kb button:disabled{cursor:default}
+/* visual v2 */
+body{background-image:radial-gradient(var(--dot) 1.6px,transparent 1.6px),radial-gradient(1100px 460px at 50% -8%,color-mix(in srgb,var(--grape) 24%,transparent),transparent);background-size:28px 28px,auto}
+h2{font-size:clamp(28px,6vw,36px)}
+.card{box-shadow:0 6px 0 var(--line)}
+.btn{transition:transform .08s,box-shadow .08s,filter .15s}
+@media(hover:hover){.btn:hover{filter:brightness(1.07)}button.chip:not(:disabled):hover,button.ghost:hover{border-color:var(--grape)}}
+.decor{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.decor span{position:absolute;font:700 var(--fs) 'Fredoka',sans-serif;color:var(--grape);opacity:.1;animation:floaty var(--d) ease-in-out infinite alternate}
+@keyframes floaty{from{transform:translateY(0) rotate(var(--r))}to{transform:translateY(-28px) rotate(calc(var(--r) + 14deg))}}
+.home .hero{padding:48px 0 6px}
+.hero .word{--ts:min(74px,calc((100vw - 48px)/7.6))}
+.tag{font:600 clamp(19px,4.6vw,25px)/1.3 'Fredoka',sans-serif;max-width:470px;margin:20px auto 0}
+.feat{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.cta{font-size:27px;min-height:70px;position:relative;overflow:hidden}
+.cta::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.38),transparent);transform:skewX(-20deg);animation:shine 3.2s ease-in-out infinite}
+@keyframes shine{0%,55%{left:-60%}100%{left:130%}}
+.foot{text-align:center;margin-top:26px;font-size:14px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.opt{display:grid;gap:4px;justify-items:center;text-align:center;padding:20px 10px;border-radius:22px;border:3px solid var(--line);background:var(--surface);cursor:pointer;box-shadow:0 6px 0 var(--line);transition:transform .12s,border-color .12s}
+.opt:hover{transform:translateY(-3px)}
+.opt .oe{font-size:40px;line-height:1.1}.opt b{font:600 21px 'Fredoka',sans-serif}.opt small{color:var(--muted);font-weight:700;line-height:1.25}
+.opt.on{border-color:var(--grape);background:color-mix(in srgb,var(--grape) 13%,var(--surface));box-shadow:0 6px 0 var(--grape)}
+.panel{animation:pop .3s both}
+.timer{background:var(--surface);border:2px solid var(--line);border-radius:26px;padding:12px 18px 16px;box-shadow:0 6px 0 var(--line)}
+.board li{box-shadow:inset 0 -3px 0 rgba(0,0,0,.06)}
+.stage{background:linear-gradient(180deg,color-mix(in srgb,var(--sun) 16%,var(--surface)),var(--surface) 45%)}
+.chip.good{border-color:var(--good);color:var(--good)}.chip.warn{border-color:var(--bad);color:var(--bad)}
+textarea{font:600 16px 'Nunito',sans-serif;width:100%;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink);padding:10px 14px;resize:vertical}
+.rxbar{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.rxbar button{width:46px;height:46px;border-radius:50%;border:2px solid var(--line);background:var(--surface);font-size:22px;cursor:pointer;box-shadow:0 3px 0 var(--line);transition:transform .1s}
+.rxbar button:active{transform:translateY(2px) scale(.94)}
+.rx{position:absolute;bottom:4%;text-align:center;animation:rxup 2.4s ease-out both}
+.rx span{display:block;font-size:46px}.rx small{display:inline-block;background:var(--ink);color:var(--bg);border-radius:99px;padding:1px 10px;font-weight:800}
+@keyframes rxup{0%{transform:translateY(0) scale(.5);opacity:0}15%{opacity:1;transform:translateY(-70px) scale(1.15)}100%{transform:translateY(-62vh) scale(1);opacity:0}}
 /* overlays */
 #fx{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
 .cf{position:absolute;top:-20px;width:10px;height:16px;border-radius:3px;animation:fall var(--d) linear var(--dl) both}
@@ -196,38 +230,47 @@ tr+tr td{border-top:2px solid var(--line)}
    window.DECIFRA_ICE=[{urls:'stun:stun.relay.metered.ca:80'},{urls:'turn:global.relay.metered.ca:443',username:'SEU_USUARIO',credential:'SUA_SENHA'},{urls:'turns:global.relay.metered.ca:443?transport=tcp',username:'SEU_USUARIO',credential:'SUA_SENHA'}];
    Deixe vazio para usar os servidores públicos padrão. */
 window.DECIFRA_ICE=[];
+/* OPCIONAL: servidor próprio de salas (mais estável que a conexão direta). Depois de publicar o servidor no Render,
+   cole aqui o endereço, por exemplo: window.DECIFRA_WS='wss://decifra-servidor.onrender.com'; Deixe vazio para usar a conexão direta (PeerJS). */
+window.DECIFRA_WS='';
 </script>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 /* Camada de rede independente do Claude: PeerJS (WebRTC) com o mesmo formato de "sala" do jogo.
    Quem registra o ID da sala vira o anfitrião; os demais conectam nele.
-   Robustez: vários STUN + TURN de reserva, batimento cardíaco, reconexão automática e novas tentativas. */
+   Robustez: vários STUN + TURN de reserva, batimento cardíaco, reconexão automática, novas tentativas
+   e TROCA AUTOMÁTICA DE ANFITRIÃO (migrate): se o anfitrião cair, um jogador assume em um novo ID (-g1, -g2...). */
 (function(){
- if(typeof Peer==='undefined'){window.claude={use:async()=>null};return}
- const ICE=(window.DECIFRA_ICE&&window.DECIFRA_ICE.length)?window.DECIFRA_ICE:[
+ const WSU=((window.DECIFRA_WS||'')+'').trim().replace(/\/$/,'');
+ if(!WSU&&typeof Peer==='undefined'){window.claude={use:async()=>null};return}
+ const DEFAULT_ICE=[
   {urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:stun.cloudflare.com:3478'},
   {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
   {urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
   {urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}];
- const OPT=()=>({config:{iceServers:ICE,iceCandidatePoolSize:4},debug:0});
+ function getICE(){const base=(window.DECIFRA_ICE&&window.DECIFRA_ICE.length)?window.DECIFRA_ICE.slice():DEFAULT_ICE.slice();try{const o=JSON.parse(localStorage.getItem('decifra.turn')||'null');if(o&&o.u&&o.n&&o.c)base.unshift({urls:o.u,username:o.n,credential:o.c})}catch(e){}return base}
+ const OPT=()=>({config:{iceServers:getICE(),iceCandidatePoolSize:4},debug:0});
  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  function bus(){const h={};return{on(t,f){(h[t]=h[t]||[]).push(f);return()=>{h[t]=(h[t]||[]).filter(x=>x!==f)}},fire(t,m){(h[t]||[]).slice().forEach(f=>{try{f(m)}catch(e){console.error(e)}})}}}
- function build(core){
-  const b=bus(),pf=[],cf=[],sf=[];
-  const room={noFailover:true,
+ function build(core,base){
+  const b=bus(),pf=[],cf=[],sf=[];let c=core;
+  const hooks={ev:(t,m)=>b.fire(t,m),peers:()=>pf.slice().forEach(f=>{try{f(c.peers())}catch(e){}}),close:()=>cf.slice().forEach(f=>{try{f()}catch(e){}}),status:s=>sf.slice().forEach(f=>{try{f(s)}catch(e){}})};
+  c.hooks=hooks;
+  const room={noFailover:true,base,
    on:(t,f)=>b.on(t,f),
-   emit:(t,d)=>{try{core.emit(t,d)}catch(e){return Promise.reject(Object.assign(new Error('emit'),{code:'closed'}))}return Promise.resolve()},
-   presence:p=>{core.pres(p);return Promise.resolve()},
-   peers:()=>core.peers(),
+   emit:(t,d)=>{try{c.emit(t,d)}catch(e){return Promise.reject(Object.assign(new Error('emit'),{code:'closed'}))}return Promise.resolve()},
+   presence:p=>{c.pres(p);return Promise.resolve()},
+   peers:()=>c.peers(),
    onPeers:f=>{pf.push(f);return()=>{const i=pf.indexOf(f);if(i>=0)pf.splice(i,1)}},
    onClose:f=>{cf.push(f);return()=>{}},
    onStatus:f=>{sf.push(f);return()=>{}},
-   leave:()=>{core.destroy();return Promise.resolve()}};
-  core.hooks={ev:(t,m)=>b.fire(t,m),peers:()=>pf.slice().forEach(f=>{try{f(core.peers())}catch(e){}}),close:()=>cf.slice().forEach(f=>{try{f()}catch(e){}}),status:s=>sf.slice().forEach(f=>{try{f(s)}catch(e){}})};
+   leave:()=>{c.destroy();return Promise.resolve()},
+   core:()=>c,swap:n=>{n.hooks=hooks;c=n},
+   migrate:(gen,delay)=>c.migrate?c.migrate():migrate(room,gen,delay)};
   return room}
  function hostCore(peer){
   const conns=new Map();let mp={},timer=null;
-  const core={hooks:null,
+  const core={hooks:null,peer,
    peers:()=>[{id:peer.id,presence:mp,isMe:true}].concat([...conns].map(([id,c])=>({id,presence:c.p,isMe:false}))),
    emit:(t,d)=>conns.forEach(c=>{if(c.conn.open)c.conn.send({t:'ev',topic:t,data:d})}),
    pres:p=>{mp=Object.assign({},mp,p);notify()},
@@ -244,10 +287,11 @@ window.DECIFRA_ICE=[];
   return core}
  function clientCore(peer,conn0,name){
   let conn=conn0,list=[],mp={},rx=Date.now(),dead=false,recon=false,tries=0;
-  const core={hooks:null,
+  const core={hooks:null,peer,
    peers:()=>list.map(p=>({id:p.id,presence:p.presence,isMe:p.id===peer.id})),
    emit:(t,d)=>{if(!conn||!conn.open)throw new Error('closed');conn.send({t:'ev',topic:t,data:d})},
    pres:p=>{mp=Object.assign({},mp,p);if(conn&&conn.open)conn.send({t:'pr',p})},
+   stop:()=>{dead=true;clearInterval(hb)},
    destroy:()=>{dead=true;clearInterval(hb);try{peer.destroy()}catch(e){}}};
   function bind(c){
    c.on('data',m=>{rx=Date.now();if(!m)return;if(m.t==='ev'&&core.hooks)core.hooks.ev(m.topic,{data:m.data});else if(m.t==='peers'){list=m.list||[];if(core.hooks)core.hooks.peers()}});
@@ -255,35 +299,87 @@ window.DECIFRA_ICE=[];
   function lost(){if(dead||recon)return;recon=true;tries=0;if(core.hooks)core.hooks.status('reconnecting');retry()}
   function retry(){
    if(dead)return;
-   if(++tries>7){dead=true;clearInterval(hb);if(core.hooks)core.hooks.close();return}
+   if(++tries>3){dead=true;clearInterval(hb);if(core.hooks)core.hooks.close();return}
    try{if(peer.disconnected)peer.reconnect()}catch(e){}
    let c;try{c=peer.connect(name,{reliable:true,serialization:'json'})}catch(e){return setTimeout(retry,1500)}
    let ok=false;
    c.on('open',()=>{if(dead){try{c.close()}catch(e){}return}ok=true;conn=c;recon=false;rx=Date.now();bind(c);try{c.send({t:'pr',p:mp})}catch(e){}if(core.hooks)core.hooks.status('ok')});
-   setTimeout(()=>{if(!ok&&!dead){try{c.close()}catch(e){}retry()}},5000)}
+   setTimeout(()=>{if(!ok&&!dead){try{c.close()}catch(e){}retry()}},3000)}
   const hb=setInterval(()=>{if(dead||recon)return;
    if(conn&&conn.open){try{conn.send({t:'pg'})}catch(e){}
     if(Date.now()-rx>16000){const c=conn;conn=null;try{c.close()}catch(e){}lost()}}
    else lost()},4000);
   peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}});
   bind(conn);return core}
+ /* ---- troca de anfitrião ---- */
+ function tryHost(hid){return new Promise(res=>{let done=false;const hp=new Peer(hid,OPT());
+  const to=setTimeout(()=>{if(!done){done=true;try{hp.destroy()}catch(e){}res(null)}},8000);
+  hp.on('open',()=>{if(done){try{hp.destroy()}catch(e){}return}done=true;clearTimeout(to);res(hostCore(hp))});
+  hp.on('error',e=>{if(done)return;done=true;clearTimeout(to);try{hp.destroy()}catch(_){}res(null)})})}
+ function tryConnect(cp,hid){return new Promise(res=>{let done=false,conn;try{conn=cp.connect(hid,{reliable:true,serialization:'json'})}catch(e){return res(null)}
+  const to=setTimeout(()=>{if(!done){done=true;try{conn.close()}catch(e){}res(null)}},4000);
+  conn.on('open',()=>{if(done){try{conn.close()}catch(e){}return}done=true;clearTimeout(to);res(clientCore(cp,conn,hid))})})}
+ async function migrate(room,gen,delay){
+  const hid=room.base+'-g'+gen,t0=Date.now(),old=room.core(),cp=old.peer;
+  while(Date.now()-t0<50000){
+   if(Date.now()-t0>=delay){const h=await tryHost(hid);if(h){room.swap(h);try{old.destroy()}catch(e){}return 'host'}}
+   const cc=await tryConnect(cp,hid);
+   if(cc){try{old.stop&&old.stop()}catch(e){}room.swap(cc);return 'client'}
+   await sleep(1200)}
+  return 'fail'}
+ /* ---- entrar / criar ---- */
  async function attempt(name){return new Promise((res,rej)=>{
-  const to=setTimeout(()=>rej(Object.assign(new Error('timeout'),{type:'timeout'})),20000);let done=false;
+  const to=setTimeout(()=>rej(Object.assign(new Error('timeout'),{type:'timeout'})),20000);let done=false,fin=false;
+  const base=name.replace(/-g\d+$/,'');
   const hp=new Peer(name,OPT());
-  hp.on('open',()=>{if(done)return;done=true;clearTimeout(to);res(build(hostCore(hp)))});
+  hp.on('open',()=>{if(done)return;done=true;fin=true;clearTimeout(to);res(build(hostCore(hp),base))});
   hp.on('error',e=>{if(done)return;done=true;
    if(e.type==='unavailable-id'){try{hp.destroy()}catch(_){}
-    const cp=new Peer(OPT());cp.on('error',x=>{clearTimeout(to);try{cp.destroy()}catch(_){}rej(x)});
-    cp.on('open',()=>{const conn=cp.connect(name,{reliable:true,serialization:'json'});conn.on('open',()=>{clearTimeout(to);res(build(clientCore(cp,conn,name)))})})}
-   else{clearTimeout(to);try{hp.destroy()}catch(_){}rej(e)}})})}
+    const cp=new Peer(OPT());cp.on('error',x=>{if(fin)return;fin=true;clearTimeout(to);try{cp.destroy()}catch(_){}rej(x)});
+    cp.on('open',()=>{const conn=cp.connect(name,{reliable:true,serialization:'json'});conn.on('open',()=>{if(fin)return;fin=true;clearTimeout(to);res(build(clientCore(cp,conn,name),base))})})}
+   else{fin=true;clearTimeout(to);try{hp.destroy()}catch(_){}rej(e)}})})}
  async function join(name){
   let last;
   for(let i=0;i<3;i++){
    try{return await attempt(name)}catch(e){last=e;if(!e||!['network','server-error','socket-error','socket-closed','timeout','peer-unavailable'].includes(e.type))break;await sleep(1200)}}
   throw last}
- window.claude={use:async n=>n==='room'?{join}:null};
+ function probe(){return new Promise(res=>{let p;const end=v=>{clearTimeout(to);try{p.destroy()}catch(e){}res(v)};const to=setTimeout(()=>end(false),9000);try{p=new Peer(OPT());p.on('open',()=>end(true));p.on('error',()=>end(false))}catch(e){end(false)}})}
+  /* ---- transporte WebSocket (servidor próprio, opcional) ---- */
+ const httpUrl=WSU.replace(/^wss:/,'https:').replace(/^ws:/,'http:');
+ function wsCore(url,roomName){return new Promise((resolve,reject)=>{
+  let ws,myId=null,hostId=null,list=[],mp={},dead=false,rx=Date.now(),first=true,recon=false,tries=0,hbT=null;
+  const core={hooks:null,
+   peers:()=>list.map(p=>({id:p.id,presence:p.presence,isMe:p.id===myId})),
+   emit:(t,d)=>{if(!ws||ws.readyState!==1)throw new Error('closed');ws.send(JSON.stringify({t:'ev',topic:t,data:d}))},
+   pres:p=>{mp=Object.assign({},mp,p);if(ws&&ws.readyState===1)ws.send(JSON.stringify({t:'pr',p}))},
+   stop:()=>{},raw:()=>ws,
+   destroy:()=>{dead=true;clearInterval(hbT);try{ws.send('{"t":"bye"}')}catch(e){}try{ws.close()}catch(e){}},
+   migrate:async()=>{const t0=Date.now();while(Date.now()-t0<20000){if(hostId)return hostId===myId?'host':'client';await sleep(300)}return 'fail'}};
+  function connect(){
+   ws=new WebSocket(url);let opened=false;
+   const to=setTimeout(()=>{if(!opened){try{ws.close()}catch(e){}}},first?75000:12000);
+   ws.onopen=()=>{opened=true;clearTimeout(to);ws.send(JSON.stringify({t:'join',room:roomName,resume:myId}))};
+   ws.onmessage=ev=>{rx=Date.now();let m;try{m=JSON.parse(ev.data)}catch(e){return}
+    if(m.t==='joined'){myId=m.id;hostId=m.hostId;tries=0;
+     if(first){first=false;resolve(core)}
+     else if(recon){recon=false;if(!m.resumed&&mp&&ws.readyState===1)ws.send(JSON.stringify({t:'pr',p:mp}));
+      if(core.hooks){core.hooks.status('ok');if(!m.resumed)core.hooks.close()}}}
+    else if(m.t==='full'){dead=true;reject(Object.assign(new Error('full'),{type:'full'}))}
+    else if(m.t==='ev'){if(core.hooks)core.hooks.ev(m.topic,{data:m.data,by:m.by})}
+    else if(m.t==='peers'){list=m.list||[];if(core.hooks)core.hooks.peers()}
+    else if(m.t==='host'){const ch=hostId&&hostId!==m.id;hostId=m.id;if(ch&&core.hooks)core.hooks.close()}};
+   ws.onclose=()=>{clearTimeout(to);if(dead)return;
+    if(first){dead=true;reject(Object.assign(new Error('ws'),{type:'network'}));return}
+    if(!recon){recon=true;if(core.hooks)core.hooks.status('reconnecting')}
+    if(++tries>8){dead=true;clearInterval(hbT);if(core.hooks)core.hooks.close();return}
+    setTimeout(connect,Math.min(1000*tries,4000))};
+   ws.onerror=()=>{}}
+  connect();
+  hbT=setInterval(()=>{if(dead)return;if(ws&&ws.readyState===1){try{ws.send('{"t":"pg"}')}catch(e){}if(Date.now()-rx>60000){try{ws.close()}catch(e){}}}},10000)})}
+ async function wsJoin(name){const core=await wsCore(WSU,name);return build(core,name.replace(/-g\d+$/,''))}
+ function wsProbe(){return new Promise(res=>{const ac=new AbortController(),to=setTimeout(()=>{ac.abort();res(false)},80000);fetch(httpUrl+'/health',{mode:'no-cors',signal:ac.signal}).then(()=>{clearTimeout(to);res(true)},()=>{clearTimeout(to);res(false)})})}
+ window.claude=WSU?{use:async n=>n==='room'?{join:wsJoin}:null,probe:wsProbe}:{use:async n=>n==='room'?{join}:null,probe};
 })();
-
 </script>
 <script>
 'use strict';
@@ -446,7 +542,23 @@ const CATS=[
 "SOLUÇO|3|Movimento involuntário|Faz um som curto e repetido|Dizem que um susto resolve",
 "CARONA|3|Ir de graça|Com outra pessoa|Num carro que não é seu"]}
 ];
-CATS.forEach(c=>{c.words=c.w.map(s=>{const a=s.split('|');return{t:a[0],d:+a[1],c:a.slice(2)}})});
+const EXTRA={
+animais:["LEÃO|1|Felino grande da savana africana|O macho tem uma juba|Dá um rugido forte","CORUJA|1|Ave que caça à noite|Tem olhos grandes e redondos|Gira a cabeça quase por completo","PREGUIÇA|1|Animal muito lento|Vive pendurado em árvores|Dorme boa parte do dia","ARARA|1|Ave colorida|Imita sons e fala|Vive em florestas tropicais","POLVO|2|Vive no mar|Tem oito braços|Solta tinta para fugir","ORCA|2|Mamífero marinho preto e branco|Grande predador dos oceanos|Também chamada de baleia assassina","GOLFINHO|2|Mamífero marinho|Muito inteligente e brincalhão|Se comunica com cliques e assobios","QUOKA|3|Marsupial pequeno da Austrália|Chamado de animal mais feliz do mundo|Parece estar sempre sorrindo","TATU-BOLA|3|Mamífero brasileiro|Se enrola como uma esfera|Foi mascote de uma Copa do Mundo"],
+comidas:["PIPOCA|1|Estoura no calor|Comida clássica de cinema|Feita com milho","HAMBÚRGUER|1|Sanduíche famoso|Tem carne no meio|Vem num pão redondo","COXINHA|1|Salgado de festa|Tem formato de gota|Recheada com frango","LASANHA|2|Massa em camadas|Leva molho e queijo|Vai ao forno","CHURRASCO|2|Reunião de fim de semana|Carne na brasa|Tem espetos e sal grosso","PÃO DE QUEIJO|2|Famoso em Minas Gerais|Bolinha assada e macia|Leva polvilho e laticínio","PANETONE|3|Típico do Natal|Pão doce e fofo|Tem frutas cristalizadas","TIRAMISU|3|Sobremesa italiana|Leva café e mascarpone|Seu nome significa me levanta","BACALHAU|3|Peixe salgado|Prato típico de Portugal|Muito comum na Páscoa"],
+objetos:["ÓCULOS|1|Ajuda a enxergar|Fica sobre o nariz|Tem armação e lentes","RELÓGIO|1|Mostra as horas|Usado no pulso ou na parede|Tem ponteiros","VIOLÃO|1|Instrumento musical|Tem seis cordas|Tocado com os dedos","MOCHILA|1|Carregada nas costas|Usada por estudantes|Tem alças e zíper","CALCULADORA|2|Faz contas|Tem teclas numéricas|Usada em provas e escritórios","LANTERNA|2|Ilumina no escuro|Funciona com pilhas|É portátil","TELESCÓPIO|2|Observa o céu|Tem lentes grandes|Mostra estrelas de perto","PERISCÓPIO|3|Usado em submarinos|Permite ver acima da água|Tem espelhos dentro de um tubo","METRÔNOMO|3|Marca o ritmo|Usado por músicos|Tem um pêndulo que balança"],
+lugares:["SUPERMERCADO|1|Lugar de compras|Tem corredores e carrinhos|Tem caixa na saída","HOSPITAL|1|Lugar de cuidados|Tem médicos e enfermeiros|Atende emergências","ESTÁDIO|1|Lugar de jogos|Tem arquibancadas|A torcida lota","CASTELO|2|Construção antiga|Tem torres e muralhas|Moradia de reis","CAVERNA|2|Buraco natural|Escuro e úmido|Tem formações de pedra no teto","PIRÂMIDE|2|Monumento de pedra|Tem forma triangular|Famosa no Egito","ANTÁRTIDA|3|Continente gelado|Fica no Pólo Sul|Habitada só por pesquisadores","OBSERVATÓRIO|3|Lugar de cientistas|Tem telescópios|Estuda o céu"],
+profissoes:["MOTORISTA|1|Trabalha dirigindo|Leva pessoas ou cargas|Passa o dia no trânsito","COZINHEIRO|1|Trabalha em restaurantes|Usa panelas e facas|Prepara refeições","DENTISTA|1|Cuida dos dentes|Usa brocas e espelhinhos|Atende em consultório","ENGENHEIRO|2|Projeta e calcula|Trabalha com obras ou máquinas|Usa capacete","PILOTO|2|Trabalha no ar|Comanda aeronaves|Usa uniforme com divisas","FOTÓGRAFO|2|Registra momentos|Usa câmera|Trabalha em eventos","PERITO|3|Investiga evidências|Trabalha com a polícia|Analisa cenas de crime","TRADUTOR|3|Trabalha com idiomas|Converte textos|Ajuda pessoas a se entenderem","CARTÓGRAFO|3|Faz mapas|Estuda territórios|Desenha rotas e fronteiras"],
+filmes:["SHREK|1|Animação|Um ogro verde|Tem um burro falante como amigo","FROZEN|1|Animação de princesas|Duas irmãs e muito gelo|Tem um boneco de neve que fala","AVATAR|2|Ficção científica|Humanos em um planeta distante|Seres azuis habitam a floresta","TUBARÃO|2|Terror no mar|Uma praia assombrada por um predador|Tem uma música de suspense famosa","GLADIADOR|2|Épico de Roma|Um general vira lutador|Cenas na arena","INTERESTELAR|3|Ficção científica|Viagem espacial por um buraco de minhoca|Pai e filha separados pelo tempo","FORREST GUMP|3|Drama|Homem simples vive grandes momentos da história|Fala de uma caixa de chocolates","O PODEROSO CHEFÃO|3|Clássico sobre máfia|Família italiana nos Estados Unidos|Don Corleone"],
+jogos:["DAMAS|1|Jogo de tabuleiro|Peças redondas|Pular as peças do adversário","STOP|1|Jogo de papel e caneta|Preencha categorias com a mesma letra|Quem termina primeiro grita","POKÉMON|2|Criaturas colecionáveis|Usam bolas especiais para capturar|Tem um rato amarelo famoso","CAÇA-PALAVRAS|2|Passatempo|Letras em uma grade|Procure palavras escondidas","SUPER MARIO|2|Encanador de bigode|Pula sobre inimigos|Resgata uma princesa","POKER|2|Jogo de cartas|Tem apostas e blefe|Mão de cinco cartas","THE SIMS|3|Simulador de vida|Personagens com necessidades|Você constrói as casas"],
+tecnologia:["WI-FI|1|Internet sem fio|Sinal no ambiente|Cafés pedem a senha","NOTEBOOK|1|Computador portátil|Dobra como um livro|Tem bateria","SENHA|1|Protege contas|Só você deve saber|Combinação secreta","SERVIDOR|2|Computador que atende outros|Guarda sites e dados|Fica em grandes centros de dados","INTELIGÊNCIA ARTIFICIAL|2|Máquinas que aprendem|Conversa e gera imagens|Tem a sigla IA","PIXEL|2|Menor ponto de uma imagem|Formam as telas|Mede resolução","BACKUP|2|Cópia de segurança|Evita perder arquivos|Feito em nuvem ou HD externo","PHISHING|3|Golpe digital|Mensagem falsa|Rouba senhas"],
+natureza:["LUA|1|Aparece à noite|Gira em torno da Terra|Tem fases","OCEANO|1|Imensa massa de água salgada|Cobre a maior parte do planeta|Atlântico e Pacífico","TERREMOTO|2|Tremor do solo|Causado por placas|Medido numa escala","GELEIRA|2|Massa enorme de gelo|Se move lentamente|Derrete com o aquecimento","AMAZÔNIA|2|Maior floresta tropical|Tem um rio gigante|Ocupa o norte do Brasil","ESTALACTITE|3|Formação de caverna|Pende do teto|Feita de minerais","MANGUEZAL|3|Ecossistema costeiro|Raízes aéreas|Berçário de caranguejos e peixes","NEBULOSA|3|Nuvem no espaço|Gás e poeira|Berçário de estrelas"],
+esportes:["TÊNIS|1|Raquete e bola|Rede no meio da quadra|Tem torneio famoso em Londres","CORRIDA|1|Vence quem chega primeiro|Pode ter pistas|Inclui maratonas","BOXE|2|Luvas|Acontece num ringue|Dividido em rounds","GOLFE|2|Tacos|Bola vai ao buraco|Jogado em gramados enormes","RÚGBI|2|Bola oval|Muito contato físico|Vale levar a bola até o fundo","PENTATLO|3|Cinco provas em um|Inclui esgrima e natação|Esporte olímpico moderno","TRIATLO|3|Três modalidades|Natação, ciclismo e corrida|Prova de resistência","SALTO COM VARA|3|Prova de atletismo|Usa vara flexível|Passa por cima de uma barra alta"],
+personagens:["CINDERELA|1|Princesa de conto|Perde um sapato|Foge à meia-noite","HOMEM-ARANHA|1|Super-herói|Lança teias|Seu nome de civil é Peter Parker","SUPER-HOMEM|1|Herói de capa|Veio de Krypton|Voa e é muito forte","ALADIM|2|Garoto de histórias árabes|Tem uma lâmpada mágica|Um gênio realiza desejos","ROBIN HOOD|2|Ladrão que ajuda os pobres|Vive na floresta de Sherwood|Excelente arqueiro","LOBISOMEM|2|Monstro|Muda na lua cheia|Uiva","GANDALF|3|Mago|Cinza e depois branco|Aparece em O Senhor dos Anéis","HÉRCULES|3|Herói mitológico|Cumpre doze trabalhos|Tem força extraordinária"],
+paises:["MÉXICO|1|Terra de tacos|Fica na América do Norte|Tem pirâmides maias","PORTUGAL|1|Fica na Europa|Lisboa é a capital|Colonizou o Brasil","ESTADOS UNIDOS|1|Tem a Estátua da Liberdade|Nova York fica lá|Washington é a capital","CANADÁ|2|Tem uma folha de bordo na bandeira|Muito frio e hóquei|País enorme ao norte","ÍNDIA|2|Tem o Taj Mahal|Mais de um bilhão de pessoas|Terra de Bollywood","CHINA|2|Tem uma grande muralha|País mais populoso da Ásia|Pequim e pandas","GRÉCIA|2|Berço da filosofia|Atenas é a capital|Ilhas azuis e brancas","NORUEGA|3|Tem fiordes|Fica na Escandinávia|Aurora boreal no inverno","QUÊNIA|3|Fica na África Oriental|Terra de safáris|Famoso por corredores de maratona"],
+cotidiano:["SEMÁFORO|1|Vermelho, amarelo e verde|Controla os carros|Fica nas esquinas","ELEVADOR|1|Sobe e desce|Tem botões numerados|Toca música ambiente","CHINELO|1|Calçado de praia|É aberto|Usa-se em casa","ESPIRRO|2|Sai de repente|Faz barulho súbito|Atchim!","MADRUGADA|2|Período do dia|Entre a meia-noite e o amanhecer|Muito silenciosa","GUARDANAPO|2|Fica na mesa|Limpa mãos e boca|Pode ser papel ou tecido","CÓCEGAS|3|Faz rir|Toque leve|Pés são o ponto fraco","ARREPIO|3|Acontece na pele|Frio ou emoção causam|Os pelos ficam em pé"]};
+CATS.push({id:'escritorio',n:'Escritório',e:'💼',w:["REUNIÃO|1|Todo mundo no mesmo lugar|Pode durar horas|Muitas poderiam ser um e-mail","IMPRESSORA|1|Vive sem papel ou sem tinta|Transforma arquivos em folhas|Todo mundo reclama dela","CAFÉ|1|Combustível da manhã|Fica na garrafa térmica|Mantém todos acordados","CRACHÁ|1|Fica pendurado no pescoço|Abre a catraca|Tem foto","FÉRIAS|1|Todo mundo espera|Dias de descanso|Costuma ser trinta dias","SALÁRIO|1|Cai todo mês|Vem no contracheque|Todo mundo gosta","PLANILHA|2|Células e fórmulas|Linhas e colunas|Muito feita no Excel","HOME OFFICE|2|Trabalhar de casa|Reunião de pijama|Cresceu muito depois da pandemia","HAPPY HOUR|2|Depois do expediente|Bebida com colegas|Alivia a semana","PRAZO|2|Data final|Gera pressão|Sempre chega rápido","VIDEOCHAMADA|2|Câmera ligada|Alguém está no mudo|Tem um link","FEEDBACK|2|Retorno sobre o desempenho|Pode ser positivo ou construtivo|Costuma vir na avaliação","ORGANOGRAMA|3|Desenho da empresa|Mostra quem responde a quem|Caixas hierárquicas","BRAINSTORM|3|Chuva de ideias|Feito em grupo|Cheio de post-its","CRONOGRAMA|3|Datas em ordem|Planeja etapas|Costuma virar um gráfico de barras"]});
+
+CATS.forEach(c=>{c.w=c.w.concat(EXTRA[c.id]||[]);c.words=c.w.map(s=>{const a=s.split('|');return{t:a[0],d:+a[1],c:a.slice(2)}})});
 
 /* ====== UTILIDADES ====== */
 const $=(s,el=document)=>el.querySelector(s);
@@ -480,7 +592,8 @@ const SET=Object.assign({sound:true,anim:true,theme:'auto'},store.get('decifra.s
 const saveProf=()=>store.set('decifra.prof',ME);
 const saveSet=()=>{store.set('decifra.set',SET);applyTheme()};
 function applyTheme(){const r=document.documentElement;SET.theme==='auto'?r.removeAttribute('data-theme'):r.setAttribute('data-theme',SET.theme)}
-const defCfg=()=>({mode:'classic',diff:2,time:60,rounds:8,cats:CATS.map(c=>c.id)});
+const defCfg=()=>({mode:'classic',diff:2,time:60,rounds:8,cw:0,cats:CATS.map(c=>c.id)});
+let CWTXT=store.get('decifra.cw')||'';const RX=['👏','😂','😮','🔥','🤔','🎉'];
 let LOC={players:[{n:'',a:AVS[0],t:0},{n:'',a:AVS[1],t:1}],cfg:defCfg(),cur:null,pass:0,gr:0};
 let T={rem:0,at:0,run:false},LASTS=-1,LOOP=null,LASTSIG='',PREV=null,PTS=[],SHAKE=false;
 const pl=id=>S&&S.pl.find(p=>p.id===id);
@@ -496,31 +609,41 @@ function banner(h,sub,k=''){if(!SET.anim)return;const b=document.createElement('
 function flash(k){if(!SET.anim)return;const b=document.createElement('div');b.className='flash '+k;$('#fx').appendChild(b);setTimeout(()=>b.remove(),700)}
 
 /* ====== MOTOR DO JOGO (autoridade = anfitrião ou aparelho local) ====== */
-function newState(code,host){return{v:1,rev:0,code,host,phase:'lobby',cfg:defCfg(),pl:[],r:null,n:0,prep:0,btw:0,pz:0,used:[],secret:null,lg:{},al:0}}
-const pub=()=>{const {secret,used,lg,al,...p}=S;return p};
-function mkPlayer(id,n,a){return{id,n:String(n||'Jogador').slice(0,12),a,c:0,t:0,s:0,h:0,st:0,bs:0,bt:0,L:3,on:1,rd:0,el:0}}
+function newState(code,host){return{v:1,rev:0,code,host,phase:'lobby',cfg:defCfg(),pl:[],r:null,n:0,prep:0,btw:0,pz:0,used:[],secret:null,lg:{},al:0,custom:[]}}
+const pub=()=>{const {secret,used,lg,al,custom,...p}=S;return p};
+function mkPlayer(id,n,a){return{id,n:String(n||'Jogador').slice(0,12),a,c:0,t:0,s:0,h:0,st:0,bs:0,bt:0,L:3,on:1,rd:0,el:0,w:0,sp:0}}
 function freeColor(){const u=new Set(S.pl.map(p=>p.c));for(let i=0;i<8;i++)if(!u.has(i))return i;return 0}
-function autoTeam(){const a=S.pl.filter(p=>p.t===0).length;return a<=S.pl.length-a?0:1}
+function autoTeam(){const act=S.pl.filter(p=>!p.sp),a=act.filter(p=>p.t===0).length;return a<=act.length-a?0:1}
 function say(pid,t,fatal){if(NET.mode==='local'||pid===NET.me){toast(t,'bad');return}if(NET.room)NET.room.emit('msg',{to:pid,t,f:fatal?1:0}).catch(()=>{})}
 function mask(w,f,l,ex){const L=[...w],set=new Set((ex||[]).map(x=>x.l));let a=-1,b=-1;L.forEach((c,i)=>{if(/[A-Za-zÀ-ÿ0-9]/.test(c)){if(a<0)a=i;b=i}});return L.map((c,i)=>/[A-Za-zÀ-ÿ0-9]/.test(c)?((i===a&&f)||(i===b&&l)||set.has(norm(c))?c:'_'):c).join('')}
+function parseCW(list){return(list||[]).slice(0,40).map(l=>String(l).split('|').map(x=>x.trim())).filter(a=>a[0]).map(a=>{const w=a[0].slice(0,24).toUpperCase(),n=[...norm(w)].length;const cl=a.slice(1,4).filter(Boolean).map(x=>x.slice(0,60));const auto=['Palavra da turma','Tem '+n+' letras','Começa com '+([...w].find(c=>/[A-ZÀ-Ý0-9]/.test(c))||'?')];while(cl.length<3)cl.push(auto[cl.length]);return{t:w,d:2,c:cl}})}
+function setCW(list){S.custom=parseCW(list);S.cfg.cw=S.custom.length;const i=S.cfg.cats.indexOf('turma');if(S.cfg.cw>0&&i<0)S.cfg.cats.push('turma');if(!S.cfg.cw&&i>=0&&S.cfg.cats.length>1)S.cfg.cats.splice(i,1)}
 function pickWord(){
  let all=[];CATS.filter(c=>S.cfg.cats.includes(c.id)).forEach(c=>c.words.forEach(w=>all.push({...w,cat:c.id})));
- let free=all.filter(w=>!S.used.includes(w.t));if(free.length<3){S.used=[];free=all}
+ if(S.cfg.cats.includes('turma'))(S.custom||[]).forEach(w=>all.push({...w,cat:'turma'}));
+ if(!all.length)CATS.forEach(c=>c.words.forEach(w=>all.push({...w,cat:c.id})));
+ let free=all.filter(w=>!S.used.includes(w.t));if(free.length<3){S.used=[];free=all.filter(w=>!S.secret||w.t!==S.secret.word);if(!free.length)free=all}
  const W={1:[[1,.8],[2,.2]],2:[[1,.2],[2,.6],[3,.2]],3:[[2,.3],[3,.7]]}[S.cfg.diff];let x=Math.random(),d=W[W.length-1][0];
  for(const [k,p] of W){if((x-=p)<0){d=k;break}}
  let pool=free.filter(w=>w.d===d);if(!pool.length)pool=free;return pool[Math.floor(Math.random()*pool.length)]}
-function pickGiver(){const ok=p=>p.on&&!p.el;let list;
+function pickGiver(){const ok=p=>p.on&&!p.el&&!p.sp;let list;
  if(S.cfg.mode==='teams'){const t=(S.n-1)%2;list=S.pl.filter(p=>p.t===t&&ok(p));if(!list.length)list=S.pl.filter(ok);return list[Math.floor((S.n-1)/2)%list.length].id}
  list=S.pl.filter(ok);return list[(S.n-1)%list.length].id}
-function eligible(){const r=S.r;return S.pl.filter(p=>p.id!==r.g&&!p.el&&p.on)}
-function gameOver(){if(S.cfg.mode==='surv'){return S.n>=30||S.pl.filter(p=>!p.el).length<=1}return S.n>=S.cfg.rounds}
+function eligible(){const r=S.r;return S.pl.filter(p=>p.id!==r.g&&!p.el&&p.on&&!p.sp)}
+function gameOver(){if(S.cfg.mode==='surv'){return S.n>=30||S.pl.filter(p=>!p.el&&!p.sp).length<=1}return S.n>=S.cfg.rounds}
 function resetScores(){S.pl.forEach(p=>{p.s=0;p.h=0;p.st=0;p.bs=0;p.bt=0;p.L=3;p.el=0})}
-function startGame(){S.used=[];S.n=0;S.pl=S.pl.filter(p=>p.on||NET.mode==='local');resetScores();nextRound()}
+function promoteSp(){S.pl.filter(p=>p.sp&&p.on).forEach(p=>{const act=S.pl.filter(q=>!q.sp);if(act.length>=8)return;if(S.cfg.mode==='teams'){const a=act.filter(q=>q.t===0).length,b=act.length-a;if(a>=4&&b>=4)return;p.t=a<=b?0:1}p.sp=0})}
+function awardWin(){const act=S.pl.filter(p=>!p.sp);let win=[];
+ if(S.cfg.mode==='teams'){const t=[0,1].map(i=>act.filter(p=>p.t===i).reduce((x,p)=>x+p.s,0));if(t[0]!==t[1]){const k=t[0]>t[1]?0:1;win=act.filter(p=>p.t===k)}}
+ else{let pool=S.cfg.mode==='surv'?act.filter(p=>!p.el):act;if(!pool.length)pool=act;const m=Math.max(0,...pool.map(p=>p.s));if(m>0||S.cfg.mode==='surv')win=pool.filter(p=>p.s===m)}
+ win.forEach(p=>{p.w=(p.w||0)+1})}
+function finish(){S.phase='final';S.pz=0;awardWin()}
+function startGame(){S.used=[];S.n=0;S.pl=S.pl.filter(p=>p.on||NET.mode==='local');promoteSp();resetScores();nextRound()}
 function nextRound(){
- if(S.n>0&&gameOver()){S.phase='final';S.pz=0;return bump()}
+ if(S.n>0&&gameOver()){finish();return bump()}
  S.n++;const m=MODES[S.cfg.mode],w=pickWord(),g=m.g?pickGiver():null,tot=effTime(S.cfg);
  S.used.push(w.t);S.secret={word:w.t,bank:w.c,q:[],qn:0};
- const cat=CATS.find(c=>c.id===w.cat);
+ const cat=CATS.find(c=>c.id===w.cat)||{e:'🏢',n:'Da turma'};
  S.r={n:S.n,cat:cat.e+' '+cat.n,wd:w.d,g,sl:m.g?SLOTS[S.cfg.diff]:SCHED[S.cfg.diff].length,cl:[],tot,rem:tot,run:false,pat:mask(w.t,false,false),gs:[],sv:[],rush:0,w:null,gp:0,why:'',lost:[],lt:[],hu:{}};
  S.pz=0;
  if(m.g){S.phase='prep';S.prep=45000;if(NET.mode==='local'){LOC.gr=0}}else startRound();
@@ -541,9 +664,9 @@ function handle(pid,a){
  const p=pl(pid),r=S.r;
  switch(a.type){
  case 'hello':{let q=p;
-  if(!q){if(S.phase!=='lobby')return say(pid,'A partida já começou. Peça para o anfitrião te chamar na próxima.',1);
-   if(S.pl.length>=8)return say(pid,'Sala cheia (máximo de 8 jogadores).',1);
-   q=mkPlayer(pid,a.n,a.av);q.c=freeColor();q.t=autoTeam();S.pl.push(q)}
+  if(!q){const live=S.phase!=='lobby',act=S.pl.filter(x=>!x.sp).length;
+   if(S.pl.length>=12||(!live&&act>=8))return say(pid,'Sala cheia.',1);
+   q=mkPlayer(pid,a.n,a.av);q.c=freeColor();q.t=autoTeam();if(live){q.sp=1;q.rd=1}S.pl.push(q)}
   else{q.on=1;q.n=String(a.n||q.n).slice(0,12);q.a=a.av||q.a}
   delete S.lg[pid];bump();break}
  case 'ready':if(p&&S.phase==='lobby'){p.rd=p.rd?0:1;bump()}break;
@@ -554,7 +677,7 @@ function handle(pid,a){
   bump();break}
  case 'start':if(pid===S.host&&(S.phase==='lobby'))return hStart();break;
  case 'again':if(pid===S.host&&S.phase==='final'){S.pl=S.pl.filter(q=>q.on||NET.mode==='local');startGame()}break;
- case 'newgame':if(pid===S.host&&S.phase==='final'){S.phase='lobby';S.r=null;S.pl.forEach(q=>{q.rd=0});resetScores();bump()}break;
+ case 'newgame':if(pid===S.host&&S.phase==='final'){promoteSp();S.phase='lobby';S.r=null;S.pl.forEach(q=>{q.rd=0});resetScores();bump()}break;
  case 'go':if(r&&S.phase==='prep'&&pid===r.g)startRound();break;
  case 'next':if(pid===S.host&&S.phase==='between')nextRound();break;
  case 'clue':{if(!r||pid!==r.g||!['prep','round'].includes(S.phase))return;const x=String(a.x||'').trim().slice(0,60);if(!x)return;
@@ -562,19 +685,22 @@ function handle(pid,a){
   if(r.cl.length+S.secret.q.length>=r.sl)return say(pid,'Você já usou todas as pistas.');
   if(S.phase==='prep')S.secret.q.push(x);else r.cl.push(x);bump();break}
  case 'unclue':if(r&&pid===r.g&&S.phase==='prep'&&S.secret.q.length){S.secret.q.pop();bump()}break;
+ case 'cw':if(pid===S.host&&S.phase==='lobby'){setCW(a.list);bump()}break;
+ case 'swap':if(pid===S.host&&['prep','round'].includes(S.phase)){S.n--;nextRound()}break;
+ case 'react':{const e=String(a.x||'');if(!RX.includes(e))return;const n=Date.now();if(S.lg['r'+pid]&&n-S.lg['r'+pid]<800)return;S.lg['r'+pid]=n;if(isOnline()&&NET.room)NET.room.emit('fx',{p:pid,e}).catch(()=>{});showReact(pid,e);break}
  case 'letter':return letter(pid,String(a.x||''));
  case 'guess':return guess(pid,String(a.x||''));
  case 'leave':if(p){if(S.phase==='lobby'&&pid!==S.host){S.pl=S.pl.filter(q=>q.id!==pid)}else{p.on=0;onGone(p)}bump()}break;
  }}
 function hStart(){
- const c=S.pl.filter(p=>p.on);
+ const c=S.pl.filter(p=>p.on&&!p.sp);
  if(c.length<2)return say(S.host,'Precisa de pelo menos 2 jogadores.');
  if(S.cfg.mode==='teams'){const a=c.filter(x=>x.t===0).length,b=c.length-a;if(!a||!b||a>4||b>4)return say(S.host,'Monte duas equipes com 1 a 4 jogadores cada.')}
  if(NET.mode==='online'&&c.some(x=>x.id!==S.host&&!x.rd))return say(S.host,'Aguarde todos ficarem prontos.');
  startGame()}
 function guess(pid,txt){
  const r=S.r,p=pl(pid);
- if(S.phase!=='round'||!r.run||!p||p.el||r.g===pid||solvedBy(pid))return;
+ if(S.phase!=='round'||!r.run||!p||p.el||p.sp||r.g===pid||solvedBy(pid))return;
  const g=norm(txt);if(!g)return;
  if(NET.mode==='online'){const n=Date.now();if(S.lg[pid]&&n-S.lg[pid]<700)return say(pid,'Calma! Um palpite por vez.');S.lg[pid]=n}
  const w=norm(S.secret.word),t=r.tot-r.rem;let k='no';
@@ -595,12 +721,13 @@ function guess(pid,txt){
  return k}
 const LH={1:3,2:2,3:1};
 function letter(pid,x){
- const r=S.r,p=pl(pid);if(S.phase!=='round'||!r.run||!p||p.el||r.g===pid||solvedBy(pid))return;
+ const r=S.r,p=pl(pid);if(S.phase!=='round'||!r.run||!p||p.el||p.sp||r.g===pid||solvedBy(pid))return;
  const l=norm(x);if(!/^[a-z]$/.test(l))return;
  if(r.lt.some(q=>q.l===l))return say(pid,'Essa letra já foi pedida.');
  const max=S.cfg.mode==='rapid'?1:LH[S.cfg.diff];if((r.hu[pid]||0)>=max)return say(pid,'Você já usou suas dicas de letra.');
  r.hu[pid]=(r.hu[pid]||0)+1;r.lt.push({l,p:pid});p.s=Math.max(0,p.s-10);
  applyHints(1-r.rem/r.tot);bump()}
+function showReact(pid,e){if(!SET.anim)return;const p=pl(pid),d=document.createElement('div');d.className='rx';d.style.left=(6+Math.random()*78)+'%';d.innerHTML=`<span>${e}</span><small>${esc(p?p.n:'')}</small>`;$('#fx').appendChild(d);setTimeout(()=>d.remove(),2600)}
 function endRound(why){
  const r=S.r;if(S.phase!=='round'&&S.phase!=='prep')return;
  S.phase='between';r.run=false;r.w=S.secret.word;r.why=why||'time';S.pz=0;
@@ -620,7 +747,7 @@ function tick(dt){
  else if(S.phase==='between'){S.btw-=dt;if(S.btw<=0)nextRound()}
  if(NET.mode==='online'&&NET.host){
   const n=Date.now();S.pl.forEach(p=>{if(p.on||p.id===S.host)return;S.lg[p.id]=S.lg[p.id]||n;if(S.phase==='lobby'&&n-S.lg[p.id]>6000){S.pl=S.pl.filter(q=>q.id!==p.id);bump()}});
-  if(!['lobby','final'].includes(S.phase)){if(S.pl.filter(p=>p.on).length<2){S.al+=dt;if(S.al>15000){S.phase='final';bump()}}else S.al=0}}}
+  if(!['lobby','final'].includes(S.phase)){if(S.pl.filter(p=>p.on&&!p.sp).length<2){S.al+=dt;if(S.al>15000){finish();bump()}}else S.al=0}}}
 function startLoop(){stopLoop();let hb=0,last=performance.now();LOOP=setInterval(()=>{const n=performance.now(),dt=n-last;last=n;tick(dt);hb+=dt;if(hb>=3000){hb=0;if(isOnline()&&NET.host)push()}},200)}
 function stopLoop(){if(LOOP)clearInterval(LOOP);LOOP=null}
 /* sincronia de estado */
@@ -651,6 +778,7 @@ function fxDiff(a,b){
  if(b.phase==='between'&&a.phase!=='between'&&!b.r.sv.length&&b.r.why!=='cancel')toast('Ninguém acertou a tempo!','bad');
  if(b.phase==='between'&&b.r.why==='giver')toast('Quem dava as pistas saiu. Rodada cancelada.','bad');
  if(b.phase==='final'&&a.phase!=='final'){confetti(160);sfx.win()}
+ b.pl.filter(p=>!a.pl.some(x=>x.id===p.id)).forEach(p=>toast(p.n+(p.sp?' entrou para assistir':' entrou na sala'),'good'));
  b.pl.forEach(p=>{const o=a.pl.find(x=>x.id===p.id);if(o&&o.on&&!p.on)toast(p.n+' saiu da partida');if(o&&!o.on&&p.on)toast(p.n+' voltou!')})}
 /* ====== LOCAL: passar o aparelho ====== */
 function nextElig(from){const r=S.r,L=S.pl.length;let i=S.pl.findIndex(p=>p.id===from);for(let k=1;k<=L;k++){const c=S.pl[(i+k)%L];if(c.id!==r.g&&!c.el&&!solvedBy(c.id))return c.id}return null}
@@ -661,19 +789,19 @@ function localAdvance(){
 /* ====== REDE (sala online com anfitrião autoritativo) ====== */
 async function getRoom(){try{if(!window.claude||!window.claude.use)return null;return await window.claude.use('room')}catch(e){return null}}
 const genCode=()=>{const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++)s+=c[Math.floor(Math.random()*c.length)];return s};
-async function openRoom(code){const R=await getRoom();if(!R)throw new Error('cap');return R.join('decifra-'+code.toLowerCase())}
+async function openRoom(code,g){const R=await getRoom();if(!R)throw new Error('cap');return R.join('decifra-'+code.toLowerCase()+(g?'-g'+g:''))}
 function wire(room){const u=NET.un;
  u.push(room.on('act',m=>{if(NET.host&&m.data&&m.data.a)handle(m.data.pid,m.data.a)}));
+ u.push(room.on('fx',m=>{const d=m.data;if(d&&RX.includes(d.e))showReact(d.p,d.e)}));
  u.push(room.on('state',m=>{if(!NET.host)recvState(m.data)}));
  u.push(room.on('secret',m=>{const d=m.data;if(d&&d.to===ME.pid){try{NET.sec={n:d.n,w:dec(d.w),b:d.b||[],q:d.q||[]};render()}catch(e){}}}));
  u.push(room.on('msg',m=>{const d=m.data;if(d&&d.to===ME.pid){toast(d.t,'bad');if(d.f)leaveRoom(true)}}));
- u.push(room.onPeers(()=>peersChanged()));if(room.onClose)u.push(room.onClose(()=>{if(!NET.host&&NET.room===room){leaveRoom(true);toast('Conexão com o anfitrião perdida. A partida terminou.','bad')}}));if(room.onStatus)u.push(room.onStatus(st=>{if(st==='reconnecting')toast('Reconectando…');if(st==='ok'){toast('Reconectado!','good');hello()}}))}
+ u.push(room.onPeers(()=>peersChanged()));if(room.onClose)u.push(room.onClose(()=>{if(NET.room!==room)return;if(NET.host){const cd=NET.code;toast('Você perdeu a conexão com a sala. Reentrando…','bad');leaveRoom(true);joinRoom(cd,true)}else doMigrate(room)}));if(room.onStatus)u.push(room.onStatus(st=>{if(st==='reconnecting')toast('Reconectando…');if(st==='ok'){toast('Reconectado!','good');hello()}}))}
 function recvState(s){
  if(!s||s.code!==NET.code)return;
  if(S&&s.host===S.host&&s.rev<S.rev)return;
  S=s;NET.hostSeen=Date.now();
- if(!s.pl.some(p=>p.id===ME.pid)&&s.phase!=='lobby'){toast('Essa partida já começou.','bad');leaveRoom(true);return}
- V='game';after()}
+  V='game';after()}
 function peersChanged(){
  const room=NET.room;if(!room||!S)return;const peers=room.peers();
  const ids=new Set(peers.map(p=>p.presence&&p.presence.pid).filter(Boolean));
@@ -682,12 +810,25 @@ function peersChanged(){
   if(ch)bump()}
  else if(peers.some(p=>!p.isMe&&p.presence&&p.presence.h===1))NET.hostSeen=Date.now()}
 function hello(){if(NET.room)NET.room.emit('act',{pid:ME.pid,a:{type:'hello',n:ME.name,av:ME.av}}).catch(e=>{if(e&&e.code==='not_granted'){NET.denied=1}})}
+async function doMigrate(room){
+ if(NET.migrating||!S)return;NET.migrating=1;NET.gen=(NET.gen||0)+1;
+ toast('O anfitrião saiu. Escolhendo um novo…');
+ const cands=S.pl.filter(p=>p.on&&p.id!==S.host).map(p=>p.id).sort();let rank=cands.indexOf(ME.pid);if(rank<0)rank=cands.length;
+ let r='fail';try{r=await room.migrate(NET.gen,rank*7000)}catch(e){}
+ NET.migrating=0;if(NET.room!==room)return;
+ if(r==='host')promote();
+ else if(r==='client'){NET.hostSeen=Date.now();try{await room.presence({pid:ME.pid,nm:ME.name,av:ME.av,h:0})}catch(e){}hello();toast('Novo anfitrião conectado','good')}
+ else{leaveRoom(true);toast('Não foi possível continuar a partida.','bad')}}
 function promote(){
  const ids=new Set(NET.room.peers().map(p=>p.presence&&p.presence.pid).filter(Boolean));
  NET.host=true;NET.me=ME.pid;S.host=ME.pid;S.rev+=100;S.used=[];S.lg={};S.al=0;S.secret={word:'—',bank:[],q:[],qn:0};
  S.pl.forEach(p=>{if(!ids.has(p.id))p.on=0});
- NET.room.presence({h:1}).catch(()=>{});startLoop();
- if(['prep','round'].includes(S.phase))endRound('cancel');else bump();
+ NET.room.presence({pid:ME.pid,nm:ME.name,av:ME.av,h:1}).catch(()=>{});
+ S.custom=[];if(CWTXT.trim())setCW(CWTXT.split('\n'));else if(S.cfg.cw){S.cfg.cw=0;const k=S.cfg.cats.indexOf('turma');if(k>=0&&S.cfg.cats.length>1)S.cfg.cats.splice(k,1)}
+ const me=pl(ME.pid);if(me){me.rd=1;me.on=1}
+ startLoop();
+ if(['prep','round'].includes(S.phase)){S.r.w='—';endRound('cancel');S.btw=9000}
+ bump();
  toast('Você agora é o anfitrião da sala','good')}
 setInterval(()=>{ // failover do anfitrião
  if(!isOnline()||NET.host||!S||!NET.room||NET.room.noFailover)return;if(Date.now()-NET.hostSeen<9000)return;
@@ -702,21 +843,24 @@ async function createRoom(){
   await sleep(1500);
   if(room.peers().some(p=>!p.isMe&&p.presence&&p.presence.h===1)){await room.leave().catch(()=>{});continue}
   NET={mode:'online',host:true,room,code,sec:null,un:[],me:ME.pid,hostSeen:Date.now()};
-  S=newState(code,ME.pid);const me=mkPlayer(ME.pid,ME.name,ME.av);me.rd=1;me.c=0;S.pl.push(me);
+  S=newState(code,ME.pid);if(CWTXT.trim())setCW(CWTXT.split('\n'));const me=mkPlayer(ME.pid,ME.name,ME.av);me.rd=1;me.c=0;S.pl.push(me);
   wire(room);await room.presence({h:1});store.sset('decifra.sess',{code});V='game';HUB.busy='';LASTSIG='';startLoop();bump();return}
  HUB.busy='';render();toast('Não deu para criar a sala. Tente de novo.','bad')}
 async function joinRoom(code,auto){
  code=String(code).toUpperCase().replace(/[^A-Z0-9]/g,'');
  if(code.length<4)return toast('Digite o código da sala','bad');
  if(!auto&&!ME.name.trim())return toast('Digite seu nome primeiro','bad');
- HUB.busy='Entrando na sala…';render();let room;
- try{room=await openRoom(code);await room.presence({pid:ME.pid,nm:ME.name,av:ME.av,h:0})}catch(e){HUB.busy='';render();return toast('Não foi possível conectar ao modo online.','bad')}
- const hasHost=()=>room.peers().some(p=>!p.isMe&&p.presence&&p.presence.h===1),t0=Date.now();
- while(Date.now()-t0<(auto?16000:9000)&&!hasHost())await sleep(250);
- if(!hasHost()){await room.leave().catch(()=>{});HUB.busy='';store.sset('decifra.sess',null);render();return toast('Sala não encontrada. Confira o código.','bad')}
- NET={mode:'online',host:false,room,code,sec:null,un:[],me:ME.pid,hostSeen:Date.now()};S=null;LASTSIG='';wire(room);store.sset('decifra.sess',{code});
+ HUB.busy='Entrando na sala…';render();
+ let room=null,gen=0;
+ for(let g=0;g<3&&!room;g++){
+  let r;try{r=await openRoom(code,g);await r.presence({pid:ME.pid,nm:ME.name,av:ME.av,h:0})}catch(e){HUB.busy='';render();return toast('Não foi possível conectar ao modo online.','bad')}
+  const has=()=>r.peers().some(p=>!p.isMe&&p.presence&&p.presence.h===1),t0=Date.now(),lim=g===0?(auto?16000:9000):2500;
+  while(Date.now()-t0<lim&&!has())await sleep(250);
+  if(has()){room=r;gen=g}else await r.leave().catch(()=>{})}
+ if(!room){HUB.busy='';store.sset('decifra.sess',null);render();return toast('Sala não encontrada. Confira o código.','bad')}
+ NET={mode:'online',host:false,room,code,gen,sec:null,un:[],me:ME.pid,hostSeen:Date.now()};S=null;LASTSIG='';wire(room);store.sset('decifra.sess',{code});try{history.replaceState(null,'',location.pathname)}catch(e){}HUB.inv=0;
  for(let i=0;i<8&&NET.room===room&&!(S&&S.pl.some(p=>p.id===ME.pid));i++){hello();await sleep(1200)}
- HUB.busy='';if(NET.room===room&&!S){const d=NET.denied;leaveRoom(true);toast(d?'Sem permissão para jogar: peça ao dono do jogo para te dar acesso de colaborador.':'A sala não respondeu.','bad')}}
+ HUB.busy='';if(NET.room===room&&!S){const d=NET.denied;leaveRoom(true);toast(d?'Sem permissão para jogar.':'A sala não respondeu.','bad')}}
 function leaveRoom(silent){
  if(isOnline()&&NET.room){const r=NET.room;try{if(!silent)r.emit('act',{pid:ME.pid,a:{type:'leave'}}).catch(()=>{})}catch(e){}setTimeout(()=>r.leave().catch(()=>{}),400)}
  stopLoop();NET={mode:'none',host:false,room:null,code:'',sec:null,un:[],hostSeen:0};S=null;V='home';MODAL=null;LASTSIG='';PREV=null;store.sset('decifra.sess',null);render()}
@@ -724,6 +868,7 @@ function act(a){
  if(NET.mode==='local'){const actor=(a.type==='guess'||a.type==='letter')?LOC.cur:['clue','unclue','go'].includes(a.type)?S.r.g:S.host;return handle(actor,a)}
  if(NET.host)return handle(ME.pid,a);
  if(NET.room)NET.room.emit('act',{pid:ME.pid,a}).catch(()=>{})}
+function inviteUrl(){try{const u=new URL(location.href);u.search='';u.hash='';u.searchParams.set('sala',S.code);return u.toString()}catch(e){return ''}}
 function mySecret(){const r=S.r;if(!r)return null;
  if(NET.mode==='local'||(NET.host&&r.g===ME.pid))return{w:S.secret.word,b:S.secret.bank,q:S.secret.q};
  return NET.sec&&NET.sec.n===r.n?NET.sec:null}
@@ -743,47 +888,45 @@ function cfgPanel(c,edit){
  <div class="cfg-sec"><div>Dificuldade</div><div class="row">${chipsRow('diff',[1,2,3],c.diff,edit,x=>DIFFS[x])}</div><p class="mut">${{1:'Palavras comuns, mais pistas e 25% a mais de tempo.',2:'Palavras menos óbvias e pistas limitadas.',3:'Palavras complexas, poucas pistas, 25% menos tempo e pontos ×1,5.'}[c.diff]}</p></div>
  ${c.mode==='rapid'?'':`<div class="cfg-sec"><div>Tempo por rodada</div><div class="row">${chipsRow('time',[30,60,90,120],c.time,edit,x=>x+'s')}</div><p class="mut">Tempo efetivo nesta dificuldade: ${effTime(c)/1000}s</p></div>`}
  ${c.mode==='surv'?'':`<div class="cfg-sec"><div>Número de rodadas</div><div class="row">${chipsRow('rounds',[5,8,10,15],c.rounds,edit)}</div></div>`}
- <div class="cfg-sec"><div>Categorias</div><div class="row">${CATS.map(x=>`<button class="chip${c.cats.includes(x.id)?' on':''}" ${edit?`data-a="cfg" data-k="cat" data-v="${x.id}"`:'disabled'}>${x.e} ${x.n}</button>`).join('')}</div></div></div>`}
+ <div class="cfg-sec"><div>Categorias</div><div class="row">${CATS.map(x=>`<button class="chip${c.cats.includes(x.id)?' on':''}" ${edit?`data-a="cfg" data-k="cat" data-v="${x.id}"`:'disabled'}>${x.e} ${x.n}</button>`).join('')}${c.cw>0?`<button class="chip${c.cats.includes('turma')?' on':''}" ${edit?`data-a="cfg" data-k="cat" data-v="turma"`:'disabled'}>🏢 Da turma (${c.cw})</button>`:''}</div></div></div>`}
 function vHome(){
- return `<div class="wrap"><div class="hero"><div class="word" style="--n:8"><div class="wd">${[...'DECIFRA'].map((c,i)=>`<span class="tile" style="--i:${i}">${c}</span>`).join('')}</div></div>
- <p>Descubra a palavra secreta antes de todo mundo. Pistas, palpites e muita dedução!</p></div>
- <div class="menu">
- <button class="btn tang big" data-a="nav" data-to="lsetup">🎲 Jogar Localmente</button>
- <button class="btn big" data-a="hub" data-tab="create">🌐 Jogar Online</button>
- <div class="two"><button class="btn teal" data-a="hub" data-tab="create">Criar Sala</button><button class="btn sun" data-a="hub" data-tab="join">Entrar em Sala</button></div>
- <div class="two"><button class="btn ghost" data-a="nav" data-to="how">Como Jogar</button><button class="btn ghost" data-a="nav" data-to="set">Configurações</button></div>
- </div></div>`}
+ const L='DECIFRAPALAVRA'.split('');
+ const decor=L.map((c,i)=>`<span style="left:${(i*37+8)%94}%;top:${(i*53+6)%88}%;--fs:${46+(i*13)%52}px;--d:${5+(i%5)}s;--r:${(i*29)%50-25}deg">${c}</span>`).join('');
+ return `<div class="decor" aria-hidden="true">${decor}</div><div class="wrap home"><div class="hero"><div class="word" style="--n:8"><div class="wd">${[...'DECIFRA'].map((c,i)=>`<span class="tile" style="--i:${i}">${c}</span>`).join('')}</div></div>
+ <p class="tag">Descubra a palavra secreta antes de todo mundo!</p>
+ <div class="feat"><span class="chip">👥 2 a 8 jogadores</span><span class="chip">🌐 Online com código de sala</span><span class="chip">🎯 5 modos de jogo</span></div></div>
+ <div class="menu"><button class="btn tang big cta" data-a="hub" data-tab="">▶ Iniciar Partida</button>
+ <div class="two"><button class="btn ghost" data-a="nav" data-to="how">📖 Como Jogar</button><button class="btn ghost" data-a="nav" data-to="set">⚙️ Configurações</button></div></div>
+ <p class="foot mut">Pistas, palpites e muita dedução. Online, de qualquer rede, no celular ou no computador.</p></div>`}
 function vHow(){
  return `<div class="wrap narrow help"><button class="ghost back" data-a="nav" data-to="home">← Voltar</button><h2>Como jogar</h2>
  <div class="card"><h3>🎯 A ideia</h3><p>Em cada rodada existe uma palavra secreta de uma categoria. Você vê só as casinhas em branco e precisa descobrir qual é, usando pistas e a sua dedução. Digite seus palpites até acertar ou o tempo acabar.</p></div>
  <div class="card"><h3>💡 Pistas</h3><ul><li>Categoria e quantidade de letras aparecem sempre.</li><li>A primeira e a última letra surgem com o passar do tempo.</li><li>O botão <b>Escolher uma letra</b> revela, para todos, onde essa letra aparece na palavra. Custa 10 pontos e tem limite por rodada (3 no fácil, 2 no médio e 1 no difícil).</li><li>No modo Clássico, um jogador escreve as pistas. Nos outros, o jogo revela pistas sozinho.</li></ul></div>
  <div class="card"><h3>🏁 Pontos</h3><ul><li>1º a acertar: 100, 2º: 75, 3º: 50, demais: 25.</li><li>Bônus por velocidade, por poucas pistas usadas, por palavra difícil e por sequência de acertos.</li><li>Quem dá as pistas ganha pontos por cada pessoa que acerta, e mais se o primeiro acerto for rápido.</li><li>Depois do primeiro acerto, os outros têm 10 segundos para acertar também.</li></ul></div>
  <div class="card"><h3>🕹️ Modos</h3><ul>${Object.values(MODES).map(m=>`<li><b>${m.e} ${m.n}:</b> ${m.d}</li>`).join('')}</ul></div>
- <div class="card"><h3>📱 Local e online</h3><ul><li><b>Local:</b> 2 a 8 pessoas no mesmo aparelho. A tela avisa quando é hora de passar o dispositivo, e a palavra só aparece para quem dá as pistas.</li><li><b>Online:</b> crie uma sala, compartilhe o código de 5 letras e todos entram pelo celular ou computador. Se alguém sair, o jogo continua.</li></ul></div></div>`}
+ <div class="card"><h3>🌐 Jogando online</h3><ul><li>Toque em <b>Iniciar Partida</b> e escolha <b>Criar sala</b> ou <b>Entrar em sala</b>.</li><li>O anfitrião compartilha o código de 5 letras e os amigos entram pelo celular ou computador, de qualquer rede.</li><li>Se alguém sair no meio, o jogo continua. O anfitrião precisa manter a aba aberta.</li></ul></div></div>`}
 function vSet(){
  return `<div class="wrap narrow"><button class="ghost back" data-a="nav" data-to="home">← Voltar</button><h2>Configurações</h2>
  <div class="card"><h3>Aparência</h3><div class="row">${[['auto','Automático'],['light','Claro'],['dark','Escuro']].map(([k,n])=>`<button class="chip${SET.theme===k?' on':''}" data-a="theme" data-v="${k}">${n}</button>`).join('')}</div></div>
  <div class="card"><h3>Som e animações</h3><div class="row"><button class="chip${SET.sound?' on':''}" data-a="snd">🔊 Sons ${SET.sound?'ligados':'desligados'}</button><button class="chip${SET.anim?' on':''}" data-a="anim">✨ Animações ${SET.anim?'ligadas':'desligadas'}</button></div></div>
+ <div class="card"><h3>🛰️ Servidor de conexão (opcional)</h3><p class="mut">Só use se a rede bloquear o jogo. Crie uma conta gratuita em metered.ca (ou outro serviço TURN) e cole os dados. Vale apenas para este aparelho.</p><input id="t_u" data-in="turn" data-k="u" placeholder="Endereço, ex.: turn:global.relay.metered.ca:443" value="${esc((store.get('decifra.turn')||{}).u||'')}"><div style="height:8px"></div><input id="t_n" data-in="turn" data-k="n" placeholder="Usuário" value="${esc((store.get('decifra.turn')||{}).n||'')}"><div style="height:8px"></div><input id="t_c" data-in="turn" data-k="c" placeholder="Senha" value="${esc((store.get('decifra.turn')||{}).c||'')}"></div>
  <div class="card"><h3>Seu perfil online</h3><input id="myname" data-in="name" value="${esc(ME.name)}" maxlength="12" placeholder="Seu nome"><div class="avgrid" style="margin-top:12px">${AVS.map(a=>`<button class="${a===ME.av?'on':''}" data-a="mav" data-v="${a}">${a}</button>`).join('')}</div></div></div>`}
-function vLsetup(){
- const L=LOC,teams=L.cfg.mode==='teams';
- return `<div class="wrap narrow"><button class="ghost back" data-a="nav" data-to="home">← Voltar</button><h2>Jogo local</h2><p class="mut">Todos no mesmo aparelho. Passem o dispositivo quando a tela pedir.</p>
- <div class="card"><h3>Jogadores (${L.players.length}/8)</h3>
- ${L.players.map((p,i)=>`<div class="prow"><button class="avb" data-a="lav" data-i="${i}" style="--c:${COLORS[i]}" aria-label="Trocar avatar">${p.a}</button><input id="ln${i}" data-in="ln" data-i="${i}" value="${esc(p.n)}" maxlength="12" placeholder="Jogador ${i+1}">${teams?`<button class="team t${p.t}" data-a="lteam" data-i="${i}">${p.t?'Azul':'Laranja'}</button>`:''}${L.players.length>2?`<button class="x" data-a="ldel" data-i="${i}" aria-label="Remover">✕</button>`:''}</div>`).join('')}
- ${L.players.length<8?'<button class="btn sm ghost" data-a="ladd">+ Adicionar jogador</button>':''}</div>
- ${cfgPanel(L.cfg,true)}<button class="btn tang big" data-a="lstart">Começar partida</button></div>`}
 function vHub(){
- const off=HUB.cap==='no',b=HUB.busy;
- return `<div class="wrap narrow"><button class="ghost back" data-a="nav" data-to="home">← Voltar</button><h2>Jogo online</h2>
- <div class="card"><b>Como jogar com colegas</b><p class="mut">1) O criador toca em Criar Sala. 2) Os colegas abrem este mesmo site, tocam em Entrar em Sala e digitam o código de 5 letras. O criador precisa manter a aba aberta durante a partida.</p></div>
- ${off?'<div class="card"><b>Online indisponível aqui.</b><p class="mut">Não foi possível carregar o serviço de conexão (a rede pode estar bloqueando). O modo local funciona normalmente.</p></div>':''}
- <div class="card"><h3>Seu perfil</h3><input id="myname" data-in="name" value="${esc(ME.name)}" maxlength="12" placeholder="Seu nome"><div class="avgrid" style="margin-top:12px">${AVS.map(a=>`<button class="${a===ME.av?'on':''}" data-a="mav" data-v="${a}">${a}</button>`).join('')}</div></div>
- <div class="tabs"><button class="chip${HUB.tab==='create'?' on':''}" data-a="tab" data-v="create">Criar sala</button><button class="chip${HUB.tab==='join'?' on':''}" data-a="tab" data-v="join">Entrar em sala</button></div>
- ${HUB.tab==='create'?`<div class="card"><p>Você será o anfitrião: escolhe as regras e inicia a partida. Depois é só compartilhar o código.</p><button class="btn teal big" data-a="create" ${b||off?'disabled':''}>${b||'Criar sala'}</button></div>`
- :`<div class="card"><h3>Código da sala</h3><input id="codein" data-in="code" class="code-in" maxlength="6" value="${esc(HUB.code)}" placeholder="ABCDE" autocomplete="off"><div style="height:12px"></div><button class="btn sun big" data-a="join" ${b||off?'disabled':''}>${b||'Entrar na sala'}</button></div>`}</div>`}
+ const off=HUB.cap==='no',b=HUB.busy,t=HUB.tab;
+ let panel='<p class="mut" style="text-align:center;margin-top:18px">Escolha uma das opções acima para continuar.</p>';
+ if(t==='create')panel=`<div class="card panel"><h3>🎉 Criar sala</h3><p class="mut">Você será o anfitrião: escolhe as regras e inicia a partida. Depois é só compartilhar o código da sala com os amigos.</p><div style="height:8px"></div><button class="btn teal big" data-a="create" ${b||off?'disabled':''}>${b||'Criar sala'}</button></div>`;
+ if(t==='join')panel=`<div class="card panel"><h3>🔑 Entrar em sala</h3><p class="mut">Digite o código de 5 letras que o anfitrião te passou.</p><input id="codein" data-in="code" class="code-in" maxlength="6" value="${esc(HUB.code)}" placeholder="ABCDE" autocomplete="off" autocapitalize="characters"><div style="height:12px"></div><button class="btn sun big" data-a="join" ${b||off?'disabled':''}>${b||'Entrar na sala'}</button></div>`;
+ return `<div class="wrap narrow"><button class="ghost back" data-a="nav" data-to="home">← Voltar</button><h2>Iniciar partida</h2><p class="mut">Jogue online com seus amigos, cada um na sua rede: casa, escritório ou 4G.</p>
+ <div class="row" style="margin:8px 0 4px"><span class="chip ${HUB.net==='ok'?'good':HUB.net==='bad'?'warn':''}">${HUB.net==='ok'?'🟢 Conexão com o servidor OK':HUB.net==='bad'?'🔴 Sem conexão com o servidor':('🟡 Verificando sua conexão…'+(window.DECIFRA_WS?' (o servidor gratuito pode levar até 1 min para acordar)':''))}</span></div>
+ ${HUB.net==='bad'?'<div class="card"><b>Sua rede pode estar bloqueando o jogo online.</b><p class="mut">Tente trocar para 4G ou outro Wi-Fi e recarregue a página.</p></div>':''}
+ ${HUB.inv?`<div class="card" style="border-color:var(--grape)"><b>🎟️ Você foi convidado para a sala ${esc(HUB.code)}</b><p class="mut">Escolha seu nome e avatar e toque em Entrar na sala.</p></div>`:''}
+ ${off?'<div class="card"><b>Online indisponível aqui.</b><p class="mut">Não foi possível carregar o serviço de conexão (a rede pode estar bloqueando).</p></div>':''}
+ <div class="card"><h3>👤 Seu perfil</h3><input id="myname" data-in="name" value="${esc(ME.name)}" maxlength="12" placeholder="Seu nome"><div class="avgrid" style="margin-top:12px">${AVS.map(a=>`<button class="${a===ME.av?'on':''}" data-a="mav" data-v="${a}">${a}</button>`).join('')}</div></div>
+ <div class="opts"><button class="opt${t==='create'?' on':''}" data-a="tab" data-v="create"><span class="oe">🎉</span><b>Criar sala</b><small>Você escolhe as regras e convida os amigos</small></button><button class="opt${t==='join'?' on':''}" data-a="tab" data-v="join"><span class="oe">🔑</span><b>Entrar em sala</b><small>Tenho um código de 5 letras</small></button></div>
+ ${panel}</div>`}
 function boardHtml(){
  const local=NET.mode==='local',teams=S.cfg.mode==='teams',surv=S.cfg.mode==='surv',r=S.r;
- const sorted=[...S.pl].sort((a,b)=>b.s-a.s);let th='';
+ const sorted=[...S.pl.filter(p=>!p.sp)].sort((a,b)=>b.s-a.s).concat(S.pl.filter(p=>p.sp));let th='';
  if(teams){const t=[0,1].map(i=>S.pl.filter(p=>p.t===i).reduce((s,p)=>s+p.s,0));th=`<div class="teamhead"><div class="t0">Laranja ${t[0]}</div><div class="t1">Azul ${t[1]}</div></div>`}
  return th+'<ul class="board">'+sorted.map((p,i)=>{
   const turn=local&&S.phase==='round'&&p.id===LOC.cur&&!LOC.pass,bd=[];
@@ -791,10 +934,11 @@ function boardHtml(){
   if(r&&S.phase!=='prep'&&r.sv.some(x=>x.p===p.id))bd.push('✅');
   if(p.el)bd.push('💀');if(!p.on&&!local)bd.push('⚫');if(p.st>=2)bd.push('🔥'+p.st);
   if(surv&&!p.el)bd.push('❤️'.repeat(Math.max(p.L,0)));
-  return `<li data-pid="${p.id}" class="${p.id===ME.pid&&!local?'me':''}${turn?' turn':''}"><span class="rk">${i+1}</span>${av(p,'sm')}<span class="nm">${teams?`<span style="color:${p.t?'var(--teal)':'var(--tang)'}">●</span> `:''}${esc(p.n)}${p.id===ME.pid&&!local?' (você)':''}</span><span>${bd.join(' ')}</span><span class="sc">${p.s}</span></li>`}).join('')+'</ul>'}
-function head(){const r=S.r;return `<div class="gtop"><button class="ghost" data-a="ask" data-q="leave">☰ Sair</button><div class="row"><span class="chip">Rodada ${r.n}${S.cfg.mode==='surv'?'':'/'+S.cfg.rounds}</span><span class="chip">${MODES[S.cfg.mode].e} ${MODES[S.cfg.mode].n}</span><span class="chip">${DIFFS[S.cfg.diff]}</span></div></div>`}
+  return `<li data-pid="${p.id}" class="${p.id===ME.pid&&!local?'me':''}${turn?' turn':''}"><span class="rk">${p.sp?'👀':['🥇','🥈','🥉'][i]||i+1}</span>${av(p,'sm')}<span class="nm">${teams?`<span style="color:${p.t?'var(--teal)':'var(--tang)'}">●</span> `:''}${esc(p.n)}${p.id===ME.pid&&!local?' (você)':''}${p.w?` <span class="mut">🏆${p.w}</span>`:''}</span><span>${bd.join(' ')}</span><span class="sc">${p.s}</span></li>`}).join('')+'</ul>'}
+function head(){const r=S.r;return `<div class="gtop"><button class="ghost" data-a="ask" data-q="leave">☰ Sair</button><div class="row">${NET.host&&['prep','round'].includes(S.phase)?'<button class="ghost" data-a="swap">⏭ Trocar palavra</button>':''}<span class="chip">Rodada ${r.n}${S.cfg.mode==='surv'?'':'/'+S.cfg.rounds}</span><span class="chip">${MODES[S.cfg.mode].e} ${MODES[S.cfg.mode].n}</span><span class="chip">${DIFFS[S.cfg.diff]}</span></div></div>`}
 const passHtml=(p,t,btn,a)=>`<div class="pass"><div class="card"><span class="av lg bounce" style="--c:${COLORS[p.c%8]}">${p.a}</span><h2 style="margin-top:16px">${t}<br>${esc(p.n)}</h2><div style="height:18px"></div><button class="btn big" data-a="${a}">${btn}</button></div></div>`;
 let KB=false;
+function reactBar(){return `<div class="rxbar" aria-label="Reações">${RX.map(e=>`<button data-a="rx" data-v="${e}" aria-label="Reagir ${e}">${e}</button>`).join('')}</div>`}
 function missHtml(r){const m=(r.lt||[]).filter(q=>![...r.pat].some(ch=>norm(ch)===q.l)).map(q=>q.l.toUpperCase());return m.length?`<p class="mut">Letras que não tem: <b>${m.join(' ')}</b></p>`:''}
 function hintBlock(id){const r=S.r,max=S.cfg.mode==='rapid'?1:LH[S.cfg.diff],left=max-((r.hu||{})[id]||0);
  let h=`<button class="btn ghost sm" type="button" data-a="kb" ${left<=0?'disabled':''}>🔤 ${KB&&left>0?'Fechar letras':'Escolher uma letra'} (${left} ${left===1?'restante':'restantes'} · −10 pts)</button>`;
@@ -803,9 +947,10 @@ function hintBlock(id){const r=S.r,max=S.cfg.mode==='rapid'?1:LH[S.cfg.diff],lef
 function vLobby(){
  const host=NET.host,me=pl(ME.pid),teams=S.cfg.mode==='teams',on=S.pl.filter(p=>p.on).length;
  return `<div class="wrap narrow"><div class="gtop"><button class="ghost" data-a="ask" data-q="leave">← Sair da sala</button><span class="chip">${on}/8 conectados</span></div>
- <div class="card" style="text-align:center"><div class="mut">Código da sala</div><div class="codebox">${[...S.code].map((c,i)=>`<span class="tile flip" style="--i:${i}">${c}</span>`).join('')}</div><button class="btn sm" data-a="copy">Copiar código</button><p class="mut">Seus amigos abrem este jogo, tocam em Entrar em Sala e digitam o código.</p></div>
- <div class="card"><h3>Jogadores</h3><ul class="board">${S.pl.map(p=>`<li class="${p.id===ME.pid?'me':''}">${av(p,'sm')}<span class="nm">${esc(p.n)}${p.id===ME.pid?' (você)':''}</span>${teams?(p.id===ME.pid?`<button class="team t${p.t}" data-a="team" data-t="${p.t?0:1}">${p.t?'Azul':'Laranja'} ⇄</button>`:`<span class="chip">${p.t?'Azul':'Laranja'}</span>`):''}<span>${p.id===S.host?'👑 Anfitrião':p.rd?'✅ Pronto':'⏳ Aguardando'} ${p.on?'🟢':'⚫'}</span></li>`).join('')}</ul></div>
+ <div class="card" style="text-align:center"><div class="mut">Código da sala</div><div class="codebox">${[...S.code].map((c,i)=>`<span class="tile flip" style="--i:${i}">${c}</span>`).join('')}</div><div class="row" style="justify-content:center"><button class="btn sm" data-a="copy">Copiar código</button><button class="btn sm teal" data-a="invite">🔗 Convidar</button></div><p class="mut">Seus amigos abrem este jogo, tocam em Entrar em Sala e digitam o código.</p></div>
+ <div class="card"><h3>Jogadores</h3><ul class="board">${S.pl.map(p=>`<li class="${p.id===ME.pid?'me':''}">${av(p,'sm')}<span class="nm">${esc(p.n)}${p.id===ME.pid?' (você)':''}${p.w?` <span class="mut">🏆${p.w}</span>`:''}</span>${teams?(p.id===ME.pid?`<button class="team t${p.t}" data-a="team" data-t="${p.t?0:1}">${p.t?'Azul':'Laranja'} ⇄</button>`:`<span class="chip">${p.t?'Azul':'Laranja'}</span>`):''}<span>${p.id===S.host?'👑 Anfitrião':p.rd?'✅ Pronto':'⏳ Aguardando'} ${p.on?'🟢':'⚫'}</span></li>`).join('')}</ul></div>
  ${cfgPanel(S.cfg,host)}
+ ${host?`<div class="card"><h3>🏢 Palavras da turma</h3><p class="mut">Opcional: uma palavra por linha (até 40). Para dar pistas, separe com barra: <b>Planilha|Tem células|Excel</b>. Elas entram como a categoria Da turma.</p><textarea id="cw" data-in="cw" rows="5" maxlength="1500" placeholder="Churrasco da firma&#10;Nome do chefe|Usa óculos|Manda e-mails longos">${esc(CWTXT)}</textarea><div style="height:8px"></div><button class="btn sm teal" data-a="cwsave">Salvar palavras${S.cfg.cw?' ('+S.cfg.cw+' salvas)':''}</button></div>`:''}
  ${host?`<button class="btn tang big" data-a="start" ${on<2?'disabled':''}>${on<2?'Aguardando mais jogadores…':'Iniciar partida'}</button>`:`<button class="btn big ${me&&me.rd?'ghost':'teal'}" data-a="ready">${me&&me.rd?'Cancelar pronto':'Estou pronto!'}</button>`}</div>`}
 function giverPanel(prep){
  const sc=mySecret();if(!sc)return '<div class="card"><p>Carregando sua palavra…</p></div>';
@@ -823,7 +968,7 @@ function vPrep(){
  return `<div class="wrap narrow">${head()}
  ${(local||amG)?giverPanel(true):`<div class="card big-msg"><span class="av lg bounce" style="--c:${COLORS[g.c%8]}">${g.a}</span><h2 style="margin-top:14px">${esc(g.n)} está preparando as pistas…</h2><p class="mut">Categoria: ${r.cat}</p>${tiles(r.pat)}</div>`}
  ${local?'':`<p class="mut" style="text-align:center">A rodada começa em <b id="cd">45</b>s ou quando as pistas ficarem prontas.</p>`}
- <div class="card"><h3>Placar</h3>${boardHtml()}</div></div>`}
+ <div class="card"><h3>Placar</h3>${boardHtml()}</div>${reactBar()}</div>`}
 function vRound(){
  const r=S.r,local=NET.mode==='local',actor=local?LOC.cur:ME.pid,mp=pl(actor),amG=!local&&r.g===ME.pid;
  const letters=[...r.pat].filter(c=>/[A-Za-zÀ-ÿ0-9_]/.test(c)).length,mine=r.sv.find(x=>x.p===actor);
@@ -831,6 +976,7 @@ function vRound(){
  if(amG)area=giverPanel(false);
  else if(!local&&mp&&mp.el)area='<div class="card big-msg"><h3>💀 Você foi eliminado</h3><p class="mut">Assista os outros jogarem.</p></div>';
  else if(!local&&mine)area=`<div class="card big-msg"><h3>✅ Você acertou! +${mine.pts}</h3><p class="mut">Aguarde os outros jogadores.</p></div>`;
+ else if(!local&&mp&&mp.sp)area='<div class="card big-msg"><h3>👀 Você está assistindo</h3><p class="mut">Você entra como jogador na próxima partida.</p></div>';
  else if(!local&&!mp)area='<div class="card big-msg"><p class="mut">Você está assistindo.</p></div>';
  else area=`<div class="card">${local&&mp?`<div class="row" style="margin-bottom:10px">${av(mp)}<h3 style="margin:0">Vez de ${esc(mp.n)}</h3></div>`:''}
   ${hintBlock(actor)}<form data-form="guess" class="gform"><input id="gi" autocomplete="off" autocapitalize="characters" placeholder="Qual é a palavra?" maxlength="40"><button class="btn tang" type="submit">Enviar</button></form>
@@ -840,7 +986,7 @@ function vRound(){
  <div class="timer"><div id="tm" class="tm">0</div><div class="tbar"><i id="bar"></i></div>${r.rush?'<p class="disp" style="color:var(--tang)">⏰ Alguém acertou! Corra!</p>':''}</div>
  <div class="card stage"><span class="chip cat">${r.cat}</span> <span class="chip">${letters} letras</span>${tiles(r.pat)}${missHtml(r)}
  ${r.cl.length?`<ul class="clues">${r.cl.map((c,i)=>`<li><b>${i+1}</b>${esc(c)}</li>`).join('')}</ul>`:`<p class="mut">${MODES[S.cfg.mode].g?'Esperando a primeira pista…':'As pistas chegam com o tempo.'}</p>`}</div>
- ${area}${feed}</div><aside><div class="card"><h3>Placar</h3>${boardHtml()}</div></aside></div></div>`
+ ${area}${feed}</div><aside><div class="card"><h3>Placar</h3>${boardHtml()}</div>${reactBar()}</aside></div></div>`
  +(local&&LOC.pass&&mp?passHtml(mp,'Vez de','Estou pronto!','passgo'):'')}
 function vBetween(){
  const r=S.r,local=NET.mode==='local',canNext=local||NET.host,over=S.n>0&&gameOver();
@@ -851,11 +997,11 @@ function vBetween(){
  ${r.sv.map((s,i)=>{const p=pl(s.p);return `<div class="it">${['🥇','🥈','🥉'][i]||'✅'} ${av(p,'sm')}<span>${esc(p.n)} <span class="mut">(${(s.t/1000).toFixed(1)}s)</span></span><b>+${s.pts}</b></div>`}).join('')}
  ${r.g&&r.gp?`<div class="it">🎤 ${av(pl(r.g),'sm')}<span>${esc(pl(r.g).n)} (pistas)</span><b>+${r.gp}</b></div>`:''}
  ${miss.map(p=>`<div class="it">❌ ${av(p,'sm')}<span>${esc(p.n)} não acertou</span>${S.cfg.mode==='surv'?`<b style="color:var(--bad)">${p.el?'💀':'−1 ❤️'}</b>`:''}</div>`).join('')}</div></div>
- <div class="card"><h3>Placar</h3>${boardHtml()}</div>
+ <div class="card"><h3>Placar</h3>${boardHtml()}</div>${reactBar()}
  ${canNext?`<button class="btn tang big" data-a="next">${over?'Ver resultado final':'Próxima rodada'} (<span id="cd">8</span>)</button>`:`<p class="mut" style="text-align:center">${over?'Resultado final em':'Próxima rodada em'} <b id="cd">8</b>s…</p>`}</div>`}
 function vFinal(){
  const surv=S.cfg.mode==='surv',teams=S.cfg.mode==='teams',host=NET.mode==='local'||NET.host;
- const rk=[...S.pl].sort((a,b)=>surv?((a.el-b.el)||(b.s-a.s)):(b.s-a.s||b.h-a.h));
+ const rk=[...S.pl.filter(p=>!p.sp)].sort((a,b)=>surv?((a.el-b.el)||(b.s-a.s)):(b.s-a.s||b.h-a.h));
  let win=rk[0].n+' venceu!';
  if(teams){const t=[0,1].map(i=>S.pl.filter(p=>p.t===i).reduce((s,p)=>s+p.s,0));win=t[0]===t[1]?'Empate entre as equipes!':`Equipe ${t[0]>t[1]?'Laranja':'Azul'} venceu! (${Math.max(...t)} a ${Math.min(...t)})`}
  const pod=[[rk[1],'p2','🥈'],[rk[0],'p1','🥇'],[rk[2],'p3','🥉']].filter(x=>x[0]);
@@ -864,13 +1010,14 @@ function vFinal(){
  <div class="podium">${pod.map(([p,c,m])=>`<div class="pc ${c}">${av(p,'lg')}<div class="nm">${esc(p.n)}</div><div class="step">${m}</div><b class="disp">${p.s} pts</b></div>`).join('')}</div>
  <div class="hl"><div>🎯 Total de acertos<big>${most&&most.h?most.h:0}</big>${most&&most.h?esc(most.n):'—'}</div><div>⚡ Maior sequência<big>${bs&&bs.bs?bs.bs:0}</big>${bs&&bs.bs?esc(bs.n):'—'}</div><div>⏱️ Melhor tempo<big>${bt?(bt.bt/1000).toFixed(1)+'s':'—'}</big>${bt?esc(bt.n):'—'}</div></div>
  <div class="card"><h3>📊 Pontuação de todos</h3><div style="overflow-x:auto"><table><tr><th></th><th>Jogador</th><th>Pontos</th><th>🎯</th><th>⚡</th><th>⏱️</th></tr>${rk.map((p,i)=>`<tr><td>${['🥇','🥈','🥉'][i]||i+1}</td><td>${p.a} ${esc(p.n)}</td><td><b>${p.s}</b></td><td>${p.h}</td><td>${p.bs}</td><td>${p.bt?(p.bt/1000).toFixed(1)+'s':'—'}</td></tr>`).join('')}</table></div></div>
+ ${S.pl.some(p=>p.w>0)?`<div class="card"><h3>🏆 Vitórias na sala</h3><div class="row">${[...S.pl].filter(p=>!p.sp||p.w).sort((a,b)=>(b.w||0)-(a.w||0)).map(p=>`<span class="chip">${p.a} ${esc(p.n)} · <b>${p.w||0}</b></span>`).join('')}</div></div>`:''}
  <div class="menu" style="max-width:none">${host?'<button class="btn tang big" data-a="again">Jogar novamente</button><button class="btn teal big" data-a="newgame">Nova partida</button>':'<p class="mut" style="text-align:center">Aguardando o anfitrião decidir o que vem agora…</p>'}<button class="btn ghost big" data-a="menu2">Voltar ao menu</button></div></div>`}
 function view(){
  if(V==='game'&&S){const p=S.phase;if(p==='lobby')return isOnline()?vLobby():'';if(p==='prep')return vPrep();if(p==='round')return vRound();if(p==='between')return vBetween();return vFinal()}
- return({home:vHome,how:vHow,set:vSet,lsetup:vLsetup,hub:vHub}[V]||vHome)()}
+ return({home:vHome,how:vHow,set:vSet,hub:vHub}[V]||vHome)()}
 function modalHtml(){const on=isOnline();return `<div class="modal"><div class="card"><h3>${on?'Sair da sala?':'Encerrar a partida?'}</h3><p class="mut">${on&&NET.host?'Outro jogador vai assumir como anfitrião.':'Seu progresso nesta partida será perdido.'}</p><div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" data-a="no">Continuar jogando</button><button class="btn rose" data-a="yes">Sair</button></div></div></div>`}
 function render(){
- const app=$('#app'),ae=document.activeElement,keep=ae&&ae.id&&ae.tagName==='INPUT'?{id:ae.id,v:ae.value}:null;
+ const app=$('#app'),ae=document.activeElement,keep=ae&&ae.id&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA')?{id:ae.id,v:ae.value}:null;
  let h;try{h=view()}catch(e){console.error(e);h='<div class="wrap"><p>Ops, algo deu errado ao desenhar a tela.</p><button class="btn" data-a="menu2">Voltar ao menu</button></div>'}
  app.innerHTML=h+(MODAL?modalHtml():'');
  if(keep){const n=document.getElementById(keep.id);if(n){n.value=keep.v;try{n.focus()}catch(e){}}}
@@ -890,8 +1037,8 @@ function lstart(){
  S.pl=L.players.map((p,i)=>{const q=mkPlayer('p'+(i+1),(p.n||'').trim()||'Jogador '+(i+1),p.a);q.c=i;q.t=p.t||0;return q});
  V='game';LASTSIG='';PREV=null;startLoop();startGame()}
 const A={
- nav(d){V=d.to;render()},
- hub(d){V='hub';HUB.tab=d.tab;HUB.cap=null;render();getRoom().then(r=>{HUB.cap=r?'ok':'no';if(V==='hub')render()})},
+ nav(d){V=d.to;window.scrollTo(0,0);render()},
+ hub(d){V='hub';HUB.tab=d.tab||null;window.scrollTo(0,0);HUB.cap=null;HUB.net=null;render();if(window.claude&&claude.probe)claude.probe().then(ok=>{HUB.net=ok?'ok':'bad';if(V==='hub')render()});else HUB.net='bad';getRoom().then(r=>{HUB.cap=r?'ok':'no';if(V==='hub')render()})},
  tab(d){HUB.tab=d.v;render()},
  mav(d){ME.av=d.v;saveProf();render()},
  create(){createRoom()},join(){joinRoom(HUB.code)},
@@ -914,6 +1061,9 @@ const A={
  grgo(){LOC.gr=1;render()},
  passgo(){LOC.pass=0;S.pz=0;setT();render()},
  skip(){localAdvance()},
+ rx(d){act({type:'react',x:d.v})},swap(){act({type:'swap'})},
+ cwsave(){act({type:'cw',list:CWTXT.split('\n')});toast('Palavras salvas!','good')},
+ invite(){const u=inviteUrl(),t='Vem jogar Decifra! Código da sala: '+S.code;if(navigator.share){navigator.share({title:'Decifra!',text:t,url:u}).catch(()=>{})}else{try{navigator.clipboard.writeText(t+'\n'+u).then(()=>toast('Convite copiado!','good'),()=>toast(u))}catch(e){toast(u)}}},
  kb(){KB=!KB;render()},pick(d){KB=false;act({type:'letter',x:d.v})},
  next(){act({type:'next'})},again(){act({type:'again'})},
  newgame(){if(NET.mode==='local'){stopLoop();S=null;NET={mode:'none',host:false,room:null,code:'',sec:null,un:[],hostSeen:0};V='lsetup';LASTSIG='';render()}else act({type:'newgame'})},
@@ -922,10 +1072,14 @@ const F={guess(f){const i=f.querySelector('input'),x=i.value;if(!x.trim())return
  if(NET.mode==='local'){handle(LOC.cur,{type:'guess',x});localAdvance()}else act({type:'guess',x})}};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const f=A[b.dataset.a];if(f)f(b.dataset,b)});
 document.addEventListener('submit',e=>{const f=e.target.closest('[data-form]');if(!f)return;e.preventDefault();F[f.dataset.form](f)});
-document.addEventListener('input',e=>{const t=e.target,k=t.dataset&&t.dataset.in;if(k==='ln')LOC.players[+t.dataset.i].n=t.value;else if(k==='name'){ME.name=t.value.slice(0,12);saveProf()}else if(k==='code'){HUB.code=t.value.toUpperCase()}});
+document.addEventListener('input',e=>{const t=e.target,k=t.dataset&&t.dataset.in;if(k==='ln')LOC.players[+t.dataset.i].n=t.value;else if(k==='name'){ME.name=t.value.slice(0,12);saveProf()}else if(k==='code'){HUB.code=t.value.toUpperCase()}else if(k==='cw'){CWTXT=t.value;store.set('decifra.cw',CWTXT)}else if(k==='turn'){const o=store.get('decifra.turn')||{};o[t.dataset.k]=t.value.trim();store.set('decifra.turn',o)}});
 /* ====== INÍCIO ====== */
-applyTheme();render();
+addEventListener('pagehide',e=>{if(!e.persisted&&NET.room){try{NET.room.leave()}catch(x){}}});
+applyTheme();
 const sess=store.sget('decifra.sess');
+let inv='';try{inv=(new URLSearchParams(location.search).get('sala')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6)}catch(e){}
+if(inv&&!(sess&&sess.code)){A.hub({tab:'join'});HUB.code=inv;HUB.inv=1}
+render();
 if(sess&&sess.code&&ME.name){V='hub';HUB.tab='join';HUB.busy='Reconectando…';render();joinRoom(sess.code,true)}
 </script>
 </body>

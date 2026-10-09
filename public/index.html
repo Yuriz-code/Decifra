@@ -346,6 +346,7 @@ window.DECIFRA_WS='';
  function probe(){return new Promise(res=>{let p;const end=v=>{clearTimeout(to);try{p.destroy()}catch(e){}res(v)};const to=setTimeout(()=>end(false),9000);try{p=new Peer(OPT());p.on('open',()=>end(true));p.on('error',()=>end(false))}catch(e){end(false)}})}
   /* ---- transporte WebSocket (servidor próprio, opcional) ---- */
  const httpUrl=WSU.replace(/^wss:/,'https:').replace(/^ws:/,'http:');
+ if(WSU){try{fetch(httpUrl+'/health',{mode:'no-cors'}).catch(()=>{})}catch(e){}} /* acorda o servidor assim que a página abre */
  function wsCore(url,roomName){return new Promise((resolve,reject)=>{
   let ws,myId=null,hostId=null,list=[],mp={},dead=false,rx=Date.now(),first=true,recon=false,tries=0,hbT=null;
   const core={hooks:null,
@@ -357,8 +358,9 @@ window.DECIFRA_WS='';
    migrate:async()=>{const t0=Date.now();while(Date.now()-t0<20000){if(hostId)return hostId===myId?'host':'client';await sleep(300)}return 'fail'}};
   function connect(){
    ws=new WebSocket(url);let opened=false;
+   const wk=first?setTimeout(()=>{if(opened)return;try{if(typeof HUB!=='undefined'&&HUB.busy){HUB.busy='Acordando o servidor… pode levar até 1 min';render()}else if(typeof toast==='function')toast('Acordando o servidor… pode levar até 1 min')}catch(e){}},4000):0;
    const to=setTimeout(()=>{if(!opened){try{ws.close()}catch(e){}}},first?75000:12000);
-   ws.onopen=()=>{opened=true;clearTimeout(to);ws.send(JSON.stringify({t:'join',room:roomName,resume:myId}))};
+   ws.onopen=()=>{opened=true;clearTimeout(to);clearTimeout(wk);ws.send(JSON.stringify({t:'join',room:roomName,resume:myId}))};
    ws.onmessage=ev=>{rx=Date.now();let m;try{m=JSON.parse(ev.data)}catch(e){return}
     if(m.t==='joined'){myId=m.id;hostId=m.hostId;tries=0;
      if(first){first=false;resolve(core)}
@@ -368,7 +370,7 @@ window.DECIFRA_WS='';
     else if(m.t==='ev'){if(core.hooks)core.hooks.ev(m.topic,{data:m.data,by:m.by})}
     else if(m.t==='peers'){list=m.list||[];if(core.hooks)core.hooks.peers()}
     else if(m.t==='host'){const ch=hostId&&hostId!==m.id;hostId=m.id;if(ch&&core.hooks)core.hooks.close()}};
-   ws.onclose=()=>{clearTimeout(to);if(dead)return;
+   ws.onclose=()=>{clearTimeout(to);clearTimeout(wk);if(dead)return;
     if(first){dead=true;reject(Object.assign(new Error('ws'),{type:'network'}));return}
     if(!recon){recon=true;if(core.hooks)core.hooks.status('reconnecting')}
     if(++tries>8){dead=true;clearInterval(hbT);if(core.hooks)core.hooks.close();return}

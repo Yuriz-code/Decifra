@@ -346,7 +346,7 @@ window.DECIFRA_WS='';
  function probe(){return new Promise(res=>{let p;const end=v=>{clearTimeout(to);try{p.destroy()}catch(e){}res(v)};const to=setTimeout(()=>end(false),9000);try{p=new Peer(OPT());p.on('open',()=>end(true));p.on('error',()=>end(false))}catch(e){end(false)}})}
   /* ---- transporte WebSocket (servidor próprio, opcional) ---- */
  const httpUrl=WSU.replace(/^wss:/,'https:').replace(/^ws:/,'http:');
- if(WSU){try{fetch(httpUrl+'/health',{mode:'no-cors'}).catch(()=>{})}catch(e){}} /* acorda o servidor assim que a página abre */
+ if(WSU){try{fetch(httpUrl+'/alive',{mode:'no-cors'}).catch(()=>{})}catch(e){}} /* acorda o servidor assim que a página abre */
  function wsCore(url,roomName){return new Promise((resolve,reject)=>{
   let ws,myId=null,hostId=null,list=[],mp={},dead=false,rx=Date.now(),first=true,recon=false,tries=0,hbT=null;
   const core={hooks:null,
@@ -379,7 +379,11 @@ window.DECIFRA_WS='';
   connect();
   hbT=setInterval(()=>{if(dead)return;if(ws&&ws.readyState===1){try{ws.send('{"t":"pg"}')}catch(e){}if(Date.now()-rx>60000){try{ws.close()}catch(e){}}}},10000)})}
  async function wsJoin(name){const core=await wsCore(WSU,name);return build(core,name.replace(/-g\d+$/,''))}
- function wsProbe(){return new Promise(res=>{const ac=new AbortController(),to=setTimeout(()=>{ac.abort();res(false)},80000);fetch(httpUrl+'/health',{mode:'no-cors',signal:ac.signal}).then(()=>{clearTimeout(to);res(true)},()=>{clearTimeout(to);res(false)})})}
+ function wsProbe(){
+  const viaFetch=()=>new Promise(res=>{const ac=new AbortController(),to=setTimeout(()=>{ac.abort();res(false)},80000);fetch(httpUrl+'/alive',{mode:'no-cors',signal:ac.signal}).then(()=>{clearTimeout(to);res(true)},()=>{clearTimeout(to);res(false)})});
+  const viaWs=()=>new Promise(res=>{let w,done=false;const end=v=>{if(done)return;done=true;clearTimeout(to);try{w.close()}catch(e){}res(v)};const to=setTimeout(()=>end(false),80000);try{w=new WebSocket(WSU);w.onopen=()=>end(true);w.onerror=()=>end(false);w.onclose=()=>end(false)}catch(e){end(false)}});
+  /* se um bloqueador de anúncios barrar o teste HTTP, tenta direto por WebSocket */
+  return viaFetch().then(ok=>ok?true:viaWs())}
  window.claude=WSU?{use:async n=>n==='room'?{join:wsJoin}:null,probe:wsProbe}:{use:async n=>n==='room'?{join}:null,probe};
 })();
 </script>
@@ -397,8 +401,8 @@ const CATS=[
 "TAMANDUÁ|2|Come formigas e cupins|Tem focinho comprido e língua fina|Cauda peluda e garras fortes",
 "CAMALEÃO|2|É um réptil|Muda de cor|Seus olhos giram de forma independente",
 "ORNITORRINCO|3|Mamífero que bota ovos|Vive na Austrália|Tem bico de pato e cauda de castor",
-"AXOLOTE|3|Anfíbio de origem mexicana|Parece estar sempre sorrindo|Regenera até membros perdidos",
-"PANGOLIM|3|Mamífero coberto de escamas|Se enrola como uma bola|Come formigas, vive na Ásia e na África"]},
+"ORANGOTANGO|3|Primata de pelos alaranjados|Vive nas florestas de Bornéu e Sumatra|Tem braços muito longos e se balança nas árvores",
+"SURICATO|3|Pequeno mamífero africano|Fica de pé vigiando o grupo|Timão, de O Rei Leão, é um deles"]},
 {id:'comidas',n:'Comidas',e:'🍕',w:[
 "PIZZA|1|Tem origem italiana|Vem de forno e é redonda|Queijo derretido sobre massa e molho de tomate",
 "BRIGADEIRO|1|Doce brasileiro de festa|Feito com leite condensado e chocolate|Enrolado e coberto de granulado",
@@ -420,8 +424,8 @@ const CATS=[
 "LUPA|2|Aumenta o que você vê|É uma lente com cabo|Marca registrada de detetives",
 "ABAJUR|2|Fica ao lado da cama|Tem cúpula|Ilumina de forma suave",
 "GRAMPEADOR|2|Fica em mesas de escritório|Junta folhas de papel|Dispara pequenos fios de metal",
-"CLEPSIDRA|3|Mede o tempo|Funciona com água|Parente antigo da ampulheta",
-"ASTROLÁBIO|3|Instrumento antigo|Usado por navegadores|Mede a altura dos astros",
+"ESPANADOR|3|Ajuda na limpeza da casa|Tem cabo e penas ou fios macios|Tira o pó dos móveis",
+"FUNIL|3|Tem formato de cone|Ajuda a passar líquido para uma garrafa|Evita derramar o óleo fora",
 "SACA-ROLHAS|3|Utensílio de cozinha|Abre garrafas de vinho|Tem uma espiral de metal"]},
 {id:'lugares',n:'Lugares',e:'🏖️',w:[
 "PRAIA|1|Tem areia e sol|Fica à beira do mar|Lugar de guarda-sol e castelinhos",
@@ -434,7 +438,7 @@ const CATS=[
 "RODOVIÁRIA|2|Lugar de ônibus|Tem plataformas e bilheterias|Ponto de partida de viagens",
 "COLISEU|3|Monumento antigo|Fica na Itália|Arena de lutas de gladiadores",
 "OÁSIS|3|Lugar no meio do deserto|Tem água e palmeiras|Salvação de viajantes sedentos",
-"ESTALEIRO|3|Ligado a embarcações|Local de construção e reparo|Fica à beira d'água"]},
+"ACAMPAMENTO|3|Lugar para dormir ao ar livre|Tem barracas e fogueira|Escoteiros adoram"]},
 {id:'profissoes',n:'Profissões',e:'👩‍🚒',w:[
 "MÉDICO|1|Cuida da saúde das pessoas|Usa jaleco|Atende em consultório e hospital",
 "PROFESSOR|1|Trabalha em escola|Ensina alunos|Corrige provas",
@@ -480,9 +484,9 @@ const CATS=[
 "BLUETOOTH|2|Conexão sem fio|Tem alcance curto|Fones e caixas de som usam",
 "PROCESSADOR|2|O cérebro do computador|Faz os cálculos|Também chamado de CPU",
 "DRONE|2|Voa sem piloto a bordo|Tem hélices|Controlado à distância",
-"CRIPTOGRAFIA|3|Protege informações|Embaralha dados|Só quem tem a chave consegue ler",
-"BLOCKCHAIN|3|Um tipo de registro digital|Blocos encadeados|Base das criptomoedas",
-"FIREWALL|3|Barreira digital|Filtra o tráfego de rede|Protege contra invasores"]},
+"CAPTCHA|3|Teste de sites para provar algo|Pede para marcar imagens com semáforos|Serve para mostrar que você é uma pessoa",
+"QR CODE|3|Quadrado cheio de pontinhos|Lido pela câmera do celular|Usado para pagar e abrir cardápios",
+"SPAM|3|Mensagem que ninguém pediu|Lota a caixa de e-mail|Propaganda indesejada"]},
 {id:'natureza',n:'Natureza',e:'🌋',w:[
 "VULCÃO|1|Montanha especial|Pode entrar em erupção|A lava escorre da cratera",
 "ARCO-ÍRIS|1|Aparece depois da chuva|Tem sete cores|Nasce de sol com gotas d'água",
@@ -518,7 +522,7 @@ const CATS=[
 "PETER PAN|2|Menino que nunca cresce|Vive na Terra do Nunca|Amigo da fada Sininho",
 "DOM QUIXOTE|3|Cavaleiro de La Mancha|Luta contra moinhos de vento|Seu escudeiro é Sancho Pança",
 "MEDUSA|3|Figura da mitologia grega|Tem cobras no lugar dos cabelos|Seu olhar transforma em pedra",
-"CAPITÃO NEMO|3|Criado por Júlio Verne|Comanda o submarino Nautilus|Vive nas profundezas do mar"]},
+"LAMPIÃO|3|Cangaceiro famoso do sertão|Usava chapéu de couro|Seu grande amor era Maria Bonita"]},
 {id:'paises',n:'Países',e:'🌍',w:[
 "BRASIL|1|Maior país da América do Sul|Fala-se português|A capital fica no Planalto Central",
 "JAPÃO|1|País insular da Ásia|Terra do sol nascente|Samurais e sushi",
@@ -530,7 +534,7 @@ const CATS=[
 "NOVA ZELÂNDIA|2|Duas ilhas grandes|Muitas ovelhas|Cenário de filmes de fantasia",
 "ISLÂNDIA|3|Ilha vulcânica no Atlântico Norte|Terra de gelo e fogo|Reykjavik é a capital",
 "MARROCOS|3|Fica no norte da África|Tem Marrakech|Chá de hortelã e medinas",
-"BUTÃO|3|Reino no Himalaia|Mede felicidade como indicador|Fica entre Índia e China"]},
+"EMIRADOS ÁRABES|3|País do Oriente Médio|Tem Dubai e Abu Dhabi|Abriga um dos prédios mais altos do mundo"]},
 {id:'cotidiano',n:'Coisas do cotidiano',e:'🪥',w:[
 "ESCOVA DE DENTES|1|Usada todos os dias|Fica no banheiro|Combina com pasta",
 "DESPERTADOR|1|Acorda você|Faz barulho de manhã|Fica ao lado da cama",
@@ -547,9 +551,9 @@ const CATS=[
 const EXTRA={
 animais:["LEÃO|1|Felino grande da savana africana|O macho tem uma juba|Dá um rugido forte","CORUJA|1|Ave que caça à noite|Tem olhos grandes e redondos|Gira a cabeça quase por completo","PREGUIÇA|1|Animal muito lento|Vive pendurado em árvores|Dorme boa parte do dia","ARARA|1|Ave colorida|Imita sons e fala|Vive em florestas tropicais","POLVO|2|Vive no mar|Tem oito braços|Solta tinta para fugir","ORCA|2|Mamífero marinho preto e branco|Grande predador dos oceanos|Também chamada de baleia assassina","GOLFINHO|2|Mamífero marinho|Muito inteligente e brincalhão|Se comunica com cliques e assobios","QUOKA|3|Marsupial pequeno da Austrália|Chamado de animal mais feliz do mundo|Parece estar sempre sorrindo","TATU-BOLA|3|Mamífero brasileiro|Se enrola como uma esfera|Foi mascote de uma Copa do Mundo"],
 comidas:["PIPOCA|1|Estoura no calor|Comida clássica de cinema|Feita com milho","HAMBÚRGUER|1|Sanduíche famoso|Tem carne no meio|Vem num pão redondo","COXINHA|1|Salgado de festa|Tem formato de gota|Recheada com frango","LASANHA|2|Massa em camadas|Leva molho e queijo|Vai ao forno","CHURRASCO|2|Reunião de fim de semana|Carne na brasa|Tem espetos e sal grosso","PÃO DE QUEIJO|2|Famoso em Minas Gerais|Bolinha assada e macia|Leva polvilho e laticínio","PANETONE|3|Típico do Natal|Pão doce e fofo|Tem frutas cristalizadas","TIRAMISU|3|Sobremesa italiana|Leva café e mascarpone|Seu nome significa me levanta","BACALHAU|3|Peixe salgado|Prato típico de Portugal|Muito comum na Páscoa"],
-objetos:["ÓCULOS|1|Ajuda a enxergar|Fica sobre o nariz|Tem armação e lentes","RELÓGIO|1|Mostra as horas|Usado no pulso ou na parede|Tem ponteiros","VIOLÃO|1|Instrumento musical|Tem seis cordas|Tocado com os dedos","MOCHILA|1|Carregada nas costas|Usada por estudantes|Tem alças e zíper","CALCULADORA|2|Faz contas|Tem teclas numéricas|Usada em provas e escritórios","LANTERNA|2|Ilumina no escuro|Funciona com pilhas|É portátil","TELESCÓPIO|2|Observa o céu|Tem lentes grandes|Mostra estrelas de perto","PERISCÓPIO|3|Usado em submarinos|Permite ver acima da água|Tem espelhos dentro de um tubo","METRÔNOMO|3|Marca o ritmo|Usado por músicos|Tem um pêndulo que balança"],
+objetos:["ÓCULOS|1|Ajuda a enxergar|Fica sobre o nariz|Tem armação e lentes","RELÓGIO|1|Mostra as horas|Usado no pulso ou na parede|Tem ponteiros","VIOLÃO|1|Instrumento musical|Tem seis cordas|Tocado com os dedos","MOCHILA|1|Carregada nas costas|Usada por estudantes|Tem alças e zíper","CALCULADORA|2|Faz contas|Tem teclas numéricas|Usada em provas e escritórios","LANTERNA|2|Ilumina no escuro|Funciona com pilhas|É portátil","TELESCÓPIO|2|Observa o céu|Tem lentes grandes|Mostra estrelas de perto","PERISCÓPIO|3|Usado em submarinos|Permite ver acima da água|Tem espelhos dentro de um tubo","AMPULHETA|3|Mede o tempo|Tem dois recipientes de vidro|A areia desce de um para o outro"],
 lugares:["SUPERMERCADO|1|Lugar de compras|Tem corredores e carrinhos|Tem caixa na saída","HOSPITAL|1|Lugar de cuidados|Tem médicos e enfermeiros|Atende emergências","ESTÁDIO|1|Lugar de jogos|Tem arquibancadas|A torcida lota","CASTELO|2|Construção antiga|Tem torres e muralhas|Moradia de reis","CAVERNA|2|Buraco natural|Escuro e úmido|Tem formações de pedra no teto","PIRÂMIDE|2|Monumento de pedra|Tem forma triangular|Famosa no Egito","ANTÁRTIDA|3|Continente gelado|Fica no Pólo Sul|Habitada só por pesquisadores","OBSERVATÓRIO|3|Lugar de cientistas|Tem telescópios|Estuda o céu"],
-profissoes:["MOTORISTA|1|Trabalha dirigindo|Leva pessoas ou cargas|Passa o dia no trânsito","COZINHEIRO|1|Trabalha em restaurantes|Usa panelas e facas|Prepara refeições","DENTISTA|1|Cuida dos dentes|Usa brocas e espelhinhos|Atende em consultório","ENGENHEIRO|2|Projeta e calcula|Trabalha com obras ou máquinas|Usa capacete","PILOTO|2|Trabalha no ar|Comanda aeronaves|Usa uniforme com divisas","FOTÓGRAFO|2|Registra momentos|Usa câmera|Trabalha em eventos","PERITO|3|Investiga evidências|Trabalha com a polícia|Analisa cenas de crime","TRADUTOR|3|Trabalha com idiomas|Converte textos|Ajuda pessoas a se entenderem","CARTÓGRAFO|3|Faz mapas|Estuda territórios|Desenha rotas e fronteiras"],
+profissoes:["MOTORISTA|1|Trabalha dirigindo|Leva pessoas ou cargas|Passa o dia no trânsito","COZINHEIRO|1|Trabalha em restaurantes|Usa panelas e facas|Prepara refeições","DENTISTA|1|Cuida dos dentes|Usa brocas e espelhinhos|Atende em consultório","ENGENHEIRO|2|Projeta e calcula|Trabalha com obras ou máquinas|Usa capacete","PILOTO|2|Trabalha no ar|Comanda aeronaves|Usa uniforme com divisas","FOTÓGRAFO|2|Registra momentos|Usa câmera|Trabalha em eventos","CAMELÔ|3|Vende na rua|Anuncia os produtos em voz alta|A mercadoria fica numa banca na calçada","TRADUTOR|3|Trabalha com idiomas|Converte textos|Ajuda pessoas a se entenderem","MARCENEIRO|3|Trabalha com madeira|Faz móveis sob medida|Usa serra, plaina e lixa"],
 filmes:["SHREK|1|Animação|Um ogro verde|Tem um burro falante como amigo","FROZEN|1|Animação de princesas|Duas irmãs e muito gelo|Tem um boneco de neve que fala","AVATAR|2|Ficção científica|Humanos em um planeta distante|Seres azuis habitam a floresta","TUBARÃO|2|Terror no mar|Uma praia assombrada por um predador|Tem uma música de suspense famosa","GLADIADOR|2|Épico de Roma|Um general vira lutador|Cenas na arena","INTERESTELAR|3|Ficção científica|Viagem espacial por um buraco de minhoca|Pai e filha separados pelo tempo","FORREST GUMP|3|Drama|Homem simples vive grandes momentos da história|Fala de uma caixa de chocolates","O PODEROSO CHEFÃO|3|Clássico sobre máfia|Família italiana nos Estados Unidos|Don Corleone"],
 jogos:["DAMAS|1|Jogo de tabuleiro|Peças redondas|Pular as peças do adversário","STOP|1|Jogo de papel e caneta|Preencha categorias com a mesma letra|Quem termina primeiro grita","POKÉMON|2|Criaturas colecionáveis|Usam bolas especiais para capturar|Tem um rato amarelo famoso","CAÇA-PALAVRAS|2|Passatempo|Letras em uma grade|Procure palavras escondidas","SUPER MARIO|2|Encanador de bigode|Pula sobre inimigos|Resgata uma princesa","POKER|2|Jogo de cartas|Tem apostas e blefe|Mão de cinco cartas","THE SIMS|3|Simulador de vida|Personagens com necessidades|Você constrói as casas"],
 tecnologia:["WI-FI|1|Internet sem fio|Sinal no ambiente|Cafés pedem a senha","NOTEBOOK|1|Computador portátil|Dobra como um livro|Tem bateria","SENHA|1|Protege contas|Só você deve saber|Combinação secreta","SERVIDOR|2|Computador que atende outros|Guarda sites e dados|Fica em grandes centros de dados","INTELIGÊNCIA ARTIFICIAL|2|Máquinas que aprendem|Conversa e gera imagens|Tem a sigla IA","PIXEL|2|Menor ponto de uma imagem|Formam as telas|Mede resolução","BACKUP|2|Cópia de segurança|Evita perder arquivos|Feito em nuvem ou HD externo","PHISHING|3|Golpe digital|Mensagem falsa|Rouba senhas"],
@@ -558,7 +562,7 @@ esportes:["TÊNIS|1|Raquete e bola|Rede no meio da quadra|Tem torneio famoso em 
 personagens:["CINDERELA|1|Princesa de conto|Perde um sapato|Foge à meia-noite","HOMEM-ARANHA|1|Super-herói|Lança teias|Seu nome de civil é Peter Parker","SUPER-HOMEM|1|Herói de capa|Veio de Krypton|Voa e é muito forte","ALADIM|2|Garoto de histórias árabes|Tem uma lâmpada mágica|Um gênio realiza desejos","ROBIN HOOD|2|Ladrão que ajuda os pobres|Vive na floresta de Sherwood|Excelente arqueiro","LOBISOMEM|2|Monstro|Muda na lua cheia|Uiva","GANDALF|3|Mago|Cinza e depois branco|Aparece em O Senhor dos Anéis","HÉRCULES|3|Herói mitológico|Cumpre doze trabalhos|Tem força extraordinária"],
 paises:["MÉXICO|1|Terra de tacos|Fica na América do Norte|Tem pirâmides maias","PORTUGAL|1|Fica na Europa|Lisboa é a capital|Colonizou o Brasil","ESTADOS UNIDOS|1|Tem a Estátua da Liberdade|Nova York fica lá|Washington é a capital","CANADÁ|2|Tem uma folha de bordo na bandeira|Muito frio e hóquei|País enorme ao norte","ÍNDIA|2|Tem o Taj Mahal|Mais de um bilhão de pessoas|Terra de Bollywood","CHINA|2|Tem uma grande muralha|País mais populoso da Ásia|Pequim e pandas","GRÉCIA|2|Berço da filosofia|Atenas é a capital|Ilhas azuis e brancas","NORUEGA|3|Tem fiordes|Fica na Escandinávia|Aurora boreal no inverno","QUÊNIA|3|Fica na África Oriental|Terra de safáris|Famoso por corredores de maratona"],
 cotidiano:["SEMÁFORO|1|Vermelho, amarelo e verde|Controla os carros|Fica nas esquinas","ELEVADOR|1|Sobe e desce|Tem botões numerados|Toca música ambiente","CHINELO|1|Calçado de praia|É aberto|Usa-se em casa","ESPIRRO|2|Sai de repente|Faz barulho súbito|Atchim!","MADRUGADA|2|Período do dia|Entre a meia-noite e o amanhecer|Muito silenciosa","GUARDANAPO|2|Fica na mesa|Limpa mãos e boca|Pode ser papel ou tecido","CÓCEGAS|3|Faz rir|Toque leve|Pés são o ponto fraco","ARREPIO|3|Acontece na pele|Frio ou emoção causam|Os pelos ficam em pé"]};
-CATS.push({id:'escritorio',n:'Escritório',e:'💼',w:["REUNIÃO|1|Todo mundo no mesmo lugar|Pode durar horas|Muitas poderiam ser um e-mail","IMPRESSORA|1|Vive sem papel ou sem tinta|Transforma arquivos em folhas|Todo mundo reclama dela","CAFÉ|1|Combustível da manhã|Fica na garrafa térmica|Mantém todos acordados","CRACHÁ|1|Fica pendurado no pescoço|Abre a catraca|Tem foto","FÉRIAS|1|Todo mundo espera|Dias de descanso|Costuma ser trinta dias","SALÁRIO|1|Cai todo mês|Vem no contracheque|Todo mundo gosta","PLANILHA|2|Células e fórmulas|Linhas e colunas|Muito feita no Excel","HOME OFFICE|2|Trabalhar de casa|Reunião de pijama|Cresceu muito depois da pandemia","HAPPY HOUR|2|Depois do expediente|Bebida com colegas|Alivia a semana","PRAZO|2|Data final|Gera pressão|Sempre chega rápido","VIDEOCHAMADA|2|Câmera ligada|Alguém está no mudo|Tem um link","FEEDBACK|2|Retorno sobre o desempenho|Pode ser positivo ou construtivo|Costuma vir na avaliação","ORGANOGRAMA|3|Desenho da empresa|Mostra quem responde a quem|Caixas hierárquicas","BRAINSTORM|3|Chuva de ideias|Feito em grupo|Cheio de post-its","CRONOGRAMA|3|Datas em ordem|Planeja etapas|Costuma virar um gráfico de barras"]});
+CATS.push({id:'escritorio',n:'Escritório',e:'💼',w:["REUNIÃO|1|Todo mundo no mesmo lugar|Pode durar horas|Muitas poderiam ser um e-mail","IMPRESSORA|1|Vive sem papel ou sem tinta|Transforma arquivos em folhas|Todo mundo reclama dela","CAFÉ|1|Combustível da manhã|Fica na garrafa térmica|Mantém todos acordados","CRACHÁ|1|Fica pendurado no pescoço|Abre a catraca|Tem foto","FÉRIAS|1|Todo mundo espera|Dias de descanso|Costuma ser trinta dias","SALÁRIO|1|Cai todo mês|Vem no contracheque|Todo mundo gosta","PLANILHA|2|Células e fórmulas|Linhas e colunas|Muito feita no Excel","HOME OFFICE|2|Trabalhar de casa|Reunião de pijama|Cresceu muito depois da pandemia","HAPPY HOUR|2|Depois do expediente|Bebida com colegas|Alivia a semana","PRAZO|2|Data final|Gera pressão|Sempre chega rápido","VIDEOCHAMADA|2|Câmera ligada|Alguém está no mudo|Tem um link","FEEDBACK|2|Retorno sobre o desempenho|Pode ser positivo ou construtivo|Costuma vir na avaliação","HORA EXTRA|3|Acontece no trabalho|Tempo além da jornada normal|Rende um adicional no salário","VALE-TRANSPORTE|3|Benefício do trabalhador|Ajuda a pagar o ônibus|Muita gente recebe em cartão","CARTEIRA ASSINADA|3|Registro do trabalhador|Garante direitos como férias e 13º|Quem tem é chamado de CLT"]});
 
 CATS.forEach(c=>{c.w=c.w.concat(EXTRA[c.id]||[]);c.words=c.w.map(s=>{const a=s.split('|');return{t:a[0],d:+a[1],c:a.slice(2)}})});
 
@@ -581,9 +585,10 @@ const MODES={
  surv:{n:'Sobrevivência',e:'💀',d:'Cada um tem 3 vidas. Errar ou não acertar custa uma vida. O último de pé vence.'}};
 const DIFFS={1:'Fácil',2:'Médio',3:'Difícil'},SLOTS={1:6,2:4,3:3},DMULT={1:1,2:1.25,3:1.5},TMULT={1:1.25,2:1,3:.75};
 const SCHED={1:[0,.2,.45],2:[.25,.55],3:[.5]};
+const LVL={1:[1,1.6],2:[1,2.6],3:[1.5,3]}; /* nível-alvo da palavra: início → fim da partida */
 const EMOJIS=['🐾','🍴','🏠','🌍','⚽','🎬','🎵','👀','🔥','❄️','⚡','🌳','🚗','👑','💰','❤️'];
 const fmt=s=>s>=60?Math.floor(s/60)+':'+String(s%60).padStart(2,'0'):String(s);
-const effTime=c=>c.mode==='rapid'?20000:Math.round(c.time*TMULT[c.diff]/5)*5000;
+const effTime=c=>c.mode==='rapid'?20000:c.time*1000; /* tempo exato escolhido, em qualquer dificuldade */
 
 /* ====== ESTADO GLOBAL ====== */
 let V='home',S=null,MODAL=null,HUB={tab:'create',cap:null,code:'',busy:''};
@@ -625,9 +630,15 @@ function pickWord(){
  if(S.cfg.cats.includes('turma'))(S.custom||[]).forEach(w=>all.push({...w,cat:'turma'}));
  if(!all.length)CATS.forEach(c=>c.words.forEach(w=>all.push({...w,cat:c.id})));
  let free=all.filter(w=>!S.used.includes(w.t));if(free.length<3){S.used=[];free=all.filter(w=>!S.secret||w.t!==S.secret.word);if(!free.length)free=all}
- const W={1:[[1,.8],[2,.2]],2:[[1,.2],[2,.6],[3,.2]],3:[[2,.3],[3,.7]]}[S.cfg.diff];let x=Math.random(),d=W[W.length-1][0];
- for(const [k,p] of W){if((x-=p)<0){d=k;break}}
- let pool=free.filter(w=>w.d===d);if(!pool.length)pool=free;return pool[Math.floor(Math.random()*pool.length)]}
+ /* dificuldade progressiva: o nível-alvo sobe a cada rodada, do começo ao fim da partida */
+ const tot=S.cfg.mode==='surv'?12:Math.max(2,S.cfg.rounds),pr=Math.min(1,Math.max(0,((S.n||1)-1)/(tot-1)));
+ const [lo,hi]=LVL[S.cfg.diff]||LVL[2],tg=lo+(hi-lo)*pr;
+ const W=[1,2,3].map(k=>[k,Math.max(0,1-Math.abs(k-tg))]).filter(x=>x[1]>0);
+ let x=Math.random()*W.reduce((q,y)=>q+y[1],0),d=W[W.length-1][0];
+ for(const [k,q] of W){if((x-=q)<0){d=k;break}}
+ let pool=free.filter(w=>w.d===d);
+ if(!pool.length){for(const k of [1,2,3].sort((m,n)=>Math.abs(m-tg)-Math.abs(n-tg))){pool=free.filter(w=>w.d===k);if(pool.length)break}}
+ if(!pool.length)pool=free;return pool[Math.floor(Math.random()*pool.length)]}
 function pickGiver(){const ok=p=>p.on&&!p.el&&!p.sp;let list;
  if(S.cfg.mode==='teams'){const t=(S.n-1)%2;list=S.pl.filter(p=>p.t===t&&ok(p));if(!list.length)list=S.pl.filter(ok);return list[Math.floor((S.n-1)/2)%list.length].id}
  list=S.pl.filter(ok);return list[(S.n-1)%list.length].id}
@@ -713,7 +724,7 @@ function guess(pid,txt){
   let pts=Math.round((base+speed+cb+wb)*DMULT[S.cfg.diff])+(p.st>=2?Math.min(p.st-1,5)*10:0);
   if(S.cfg.mode==='teams'&&r.g&&pl(r.g).t!==p.t)pts=Math.round(pts*.6);
   p.s+=pts;r.sv.push({p:pid,pts,t});r.gs.push({p:pid,k:'ok'});k='ok';
-  if(!r.rush){r.rush=1;r.rem=Math.min(r.rem,10000)}
+  if(!r.rush){r.rush=1;r.rem=Math.min(r.rem,Math.max(15000,Math.round(r.tot*.3)))}
   if(eligible().every(q=>solvedBy(q.id)))endRound('all');else bump();
  }else{
   const near=lev(g,w)<=Math.max(1,Math.floor(w.length*.2))||(g.length>=4&&(w.includes(g)||g.includes(w)));k=near?'near':'no';
@@ -887,8 +898,8 @@ function chipsRow(k,opts,cur,edit,f){return opts.map(o=>`<button class="chip${o=
 function cfgPanel(c,edit){
  return `<div class="card"><h3>Configurações da partida${edit?'':' (definidas pelo anfitrião)'}</h3>
  <div class="cfg-sec"><div>Modo de jogo</div><div class="row">${Object.keys(MODES).map(k=>`<button class="chip${c.mode===k?' on':''}" ${edit?`data-a="cfg" data-k="mode" data-v="${k}"`:'disabled'}>${MODES[k].e} ${MODES[k].n}</button>`).join('')}</div><p class="mut">${MODES[c.mode].d}</p></div>
- <div class="cfg-sec"><div>Dificuldade</div><div class="row">${chipsRow('diff',[1,2,3],c.diff,edit,x=>DIFFS[x])}</div><p class="mut">${{1:'Palavras comuns, mais pistas e 25% a mais de tempo.',2:'Palavras menos óbvias e pistas limitadas.',3:'Palavras complexas, poucas pistas, 25% menos tempo e pontos ×1,5.'}[c.diff]}</p></div>
- ${c.mode==='rapid'?'':`<div class="cfg-sec"><div>Tempo por rodada</div><div class="row">${chipsRow('time',[30,60,90,120],c.time,edit,x=>x+'s')}</div><p class="mut">Tempo efetivo nesta dificuldade: ${effTime(c)/1000}s</p></div>`}
+ <div class="cfg-sec"><div>Dificuldade</div><div class="row">${chipsRow('diff',[1,2,3],c.diff,edit,x=>DIFFS[x])}</div><p class="mut">${{1:'Começa bem fácil e sobe devagar até palavras medianas. Mais pistas.',2:'Começa fácil e vai subindo rodada a rodada até palavras desafiadoras.',3:'Já começa mais puxado e termina com as mais difíceis. Poucas pistas e pontos ×1,5.'}[c.diff]}</p></div>
+ ${c.mode==='rapid'?'':`<div class="cfg-sec"><div>Tempo por rodada</div><div class="row">${chipsRow('time',[30,60,90,120],c.time,edit,x=>x+'s')}</div><p class="mut">Cada rodada dura exatamente ${effTime(c)/1000}s</p></div>`}
  ${c.mode==='surv'?'':`<div class="cfg-sec"><div>Número de rodadas</div><div class="row">${chipsRow('rounds',[5,8,10,15],c.rounds,edit)}</div></div>`}
  <div class="cfg-sec"><div>Categorias</div><div class="row">${CATS.map(x=>`<button class="chip${c.cats.includes(x.id)?' on':''}" ${edit?`data-a="cfg" data-k="cat" data-v="${x.id}"`:'disabled'}>${x.e} ${x.n}</button>`).join('')}${c.cw>0?`<button class="chip${c.cats.includes('turma')?' on':''}" ${edit?`data-a="cfg" data-k="cat" data-v="turma"`:'disabled'}>🏢 Da turma (${c.cw})</button>`:''}</div></div></div>`}
 function vHome(){
@@ -904,7 +915,7 @@ function vHow(){
  return `<div class="wrap narrow help"><button class="ghost back" data-a="nav" data-to="home">← Voltar</button><h2>Como jogar</h2>
  <div class="card"><h3>🎯 A ideia</h3><p>Em cada rodada existe uma palavra secreta de uma categoria. Você vê só as casinhas em branco e precisa descobrir qual é, usando pistas e a sua dedução. Digite seus palpites até acertar ou o tempo acabar.</p></div>
  <div class="card"><h3>💡 Pistas</h3><ul><li>Categoria e quantidade de letras aparecem sempre.</li><li>A primeira e a última letra surgem com o passar do tempo.</li><li>O botão <b>Escolher uma letra</b> revela, para todos, onde essa letra aparece na palavra. Custa 10 pontos e tem limite por rodada (3 no fácil, 2 no médio e 1 no difícil).</li><li>No modo Clássico, um jogador escreve as pistas. Nos outros, o jogo revela pistas sozinho.</li></ul></div>
- <div class="card"><h3>🏁 Pontos</h3><ul><li>1º a acertar: 100, 2º: 75, 3º: 50, demais: 25.</li><li>Bônus por velocidade, por poucas pistas usadas, por palavra difícil e por sequência de acertos.</li><li>Quem dá as pistas ganha pontos por cada pessoa que acerta, e mais se o primeiro acerto for rápido.</li><li>Depois do primeiro acerto, os outros têm 10 segundos para acertar também.</li></ul></div>
+ <div class="card"><h3>🏁 Pontos</h3><ul><li>1º a acertar: 100, 2º: 75, 3º: 50, demais: 25.</li><li>As palavras ficam mais difíceis a cada rodada: a primeira é a mais tranquila e a última, a mais desafiadora.</li><li>Bônus por velocidade, por poucas pistas usadas, por palavra difícil e por sequência de acertos.</li><li>Quem dá as pistas ganha pontos por cada pessoa que acerta, e mais se o primeiro acerto for rápido.</li><li>Depois do primeiro acerto, os outros ainda têm um tempo extra para acertar (15 segundos ou 30% da rodada, o que for maior).</li></ul></div>
  <div class="card"><h3>🕹️ Modos</h3><ul>${Object.values(MODES).map(m=>`<li><b>${m.e} ${m.n}:</b> ${m.d}</li>`).join('')}</ul></div>
  <div class="card"><h3>🌐 Jogando online</h3><ul><li>Toque em <b>Iniciar Partida</b> e escolha <b>Criar sala</b> ou <b>Entrar em sala</b>.</li><li>O anfitrião compartilha o código de 5 letras e os amigos entram pelo celular ou computador, de qualquer rede.</li><li>Se alguém sair no meio, o jogo continua. O anfitrião precisa manter a aba aberta.</li></ul></div></div>`}
 function vSet(){
@@ -986,7 +997,7 @@ function vRound(){
  const feed=r.gs.length?`<div class="card"><h3>Palpites</h3><div class="feed">${[...r.gs].reverse().map(g=>{const q=pl(g.p);return `<div class="g ${g.k}">${q?av(q,'sm'):''}<b>${q?esc(q.n):''}</b>${g.k==='ok'?'<span>acertou! 🎉</span>':`<span class="x1">${esc(g.x)}</span>${g.k==='near'?'<span>🔥 quase!</span>':''}`}</div>`}).join('')}</div></div>`:'';
  return `<div class="wrap"><div class="gm"><div>${head()}
  <div class="timer"><div id="tm" class="tm">0</div><div class="tbar"><i id="bar"></i></div>${r.rush?'<p class="disp" style="color:var(--tang)">⏰ Alguém acertou! Corra!</p>':''}</div>
- <div class="card stage"><span class="chip cat">${r.cat}</span> <span class="chip">${letters} letras</span>${tiles(r.pat)}${missHtml(r)}
+ <div class="card stage"><span class="chip cat">${r.cat}</span> <span class="chip">${letters} letras</span> <span class="chip" title="Nível da palavra">${'★'.repeat(r.wd||1)}${'☆'.repeat(3-(r.wd||1))}</span>${tiles(r.pat)}${missHtml(r)}
  ${r.cl.length?`<ul class="clues">${r.cl.map((c,i)=>`<li><b>${i+1}</b>${esc(c)}</li>`).join('')}</ul>`:`<p class="mut">${MODES[S.cfg.mode].g?'Esperando a primeira pista…':'As pistas chegam com o tempo.'}</p>`}</div>
  ${area}${feed}</div><aside><div class="card"><h3>Placar</h3>${boardHtml()}</div>${reactBar()}</aside></div></div>`
  +(local&&LOC.pass&&mp?passHtml(mp,'Vez de','Estou pronto!','passgo'):'')}

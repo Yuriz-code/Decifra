@@ -49,9 +49,26 @@ const SEC = {
   'Referrer-Policy': 'no-referrer',
   'X-Frame-Options': 'SAMEORIGIN'
 };
+/* arquivos do app instalável (PWA): lista fechada, sem navegar em pastas */
+const PUB = path.join(__dirname, 'public');
+const STATIC = {
+  '/manifest.webmanifest': ['manifest.webmanifest', 'application/manifest+json; charset=utf-8', 'no-cache'],
+  '/sw.js': ['sw.js', 'text/javascript; charset=utf-8', 'no-cache', { 'Service-Worker-Allowed': '/' }]
+};
+const ICON_RE = /^\/icons\/[a-z0-9-]+\.png$/;
+function sendStatic(res, file, type, cache, extra) {
+  fs.readFile(path.join(PUB, file), (err, buf) => {
+    if (err) { res.writeHead(404, SEC); return res.end('not found'); }
+    res.writeHead(200, Object.assign({ 'Content-Type': type, 'Cache-Control': cache, 'Content-Length': buf.length }, SEC, extra || {}));
+    res.end(buf);
+  });
+}
 const server = http.createServer((req, res) => {
   const url = (req.url || '/').split('?')[0];
-  if (url === '/health') {
+  const st = STATIC[url];
+  if (st) return sendStatic(res, st[0], st[1], st[2], st[3]);
+  if (ICON_RE.test(url)) return sendStatic(res, url.slice(1), 'image/png', 'public, max-age=86400');
+  if (url === '/health' || url === '/alive') {
     res.writeHead(200, Object.assign({ 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' }, SEC));
     return res.end('ok');
   }

@@ -10,13 +10,15 @@ const ROOT = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
 
-/* Executa só o trecho do banco (de "const CATS=[" até o CATS.forEach que monta c.words). */
+/* Executa só o trecho do banco (de "const CATS = [" até o CATS.forEach que monta c.words) e monta as palavras
+   do mesmo jeito que o jogo faz. Tolera o código formatado ou compacto. */
 function loadBank() {
-  const a = html.indexOf('const CATS=[');
-  const b = html.indexOf('CATS.forEach(c=>{c.w=c.w.concat(');
-  const e = html.indexOf('\n', b);
-  assert.ok(a > 0 && b > a, 'trecho do banco não encontrado');
-  return new Function(html.slice(a, e) + ';return CATS;')();
+  const a = html.search(/const CATS\s*=\s*\[/);
+  const m = html.match(/CATS\.forEach\(\s*\(?c\)?\s*=>\s*\{\s*c\.w\s*=\s*c\.w\.concat\(/);
+  assert.ok(a > 0 && m && m.index > a, 'trecho do banco não encontrado');
+  const mount = ';CATS.forEach(c=>{c.w=c.w.concat((typeof EXTRA!=="undefined"&&EXTRA[c.id])||[]);' +
+    'c.words=c.w.map(l=>{const p=l.split("|");return{t:p[0],d:+p[1],c:p.slice(2)}})});return CATS;';
+  return new Function(html.slice(a, m.index) + mount)();
 }
 
 describe('banco de palavras', () => {
@@ -58,8 +60,7 @@ describe('banco de palavras', () => {
   test('sem palavras repetidas (ignorando acentos)', () => {
     const seen = new Map(), dups = [];
     for (const w of words) { const k = norm(w.t); if (seen.has(k)) dups.push(`${w.t} / ${seen.get(k)}`); seen.set(k, w.t); }
-    // CAMELO (animal) e CAMELÔ (profissão) já existiam e só diferem no acento
-    assert.deepEqual(dups.filter(d => !/CAMEL/.test(d)), []);
+    assert.deepEqual(dups, []);
   });
 
   test('cada categoria tem palavras fáceis, médias e difíceis (a dificuldade progressiva depende disso)', () => {
@@ -89,21 +90,34 @@ describe('index.html', () => {
   });
 
   test('traz manifesto, ícones, theme-color e registro do service worker', () => {
-    assert.match(html, /<link rel="manifest" href="manifest\.webmanifest">/);
+    assert.match(html, /<link[^>]*rel="manifest"[^>]*href="manifest\.webmanifest"/);
     assert.match(html, /rel="apple-touch-icon"/);
     assert.match(html, /name="theme-color"/);
     assert.match(html, /serviceWorker\.register\('sw\.js'\)/);
     assert.match(html, /viewport-fit=cover/);
   });
 
+  test('fontes são do próprio servidor (nada de Google Fonts) e o PeerJS só é carregado sem servidor próprio', () => {
+    assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
+    assert.match(html, /@font-face[^}]*fonts\/fredoka-latin\.woff2/);
+    assert.match(html, /@font-face[^}]*fonts\/nunito-latin\.woff2/);
+    assert.doesNotMatch(html, /^\s*<script[^>]*src="https:\/\/cdn\.jsdelivr\.net\/npm\/peerjs/m, 'PeerJS não pode ter <script src> fixo');
+    assert.match(html, /if \(!String\(window\.DECIFRA_WS \|\| ''\)\.trim\(\)\)\s*document\.write\(/);
+  });
+
+  test('o arquivo está formatado (npm run formatar)', () => {
+    const r = spawnSync(process.execPath, [require.resolve('prettier/bin/prettier.cjs'), '--check', path.join(ROOT, 'public', 'index.html')], { cwd: ROOT, encoding: 'utf8' });
+    assert.equal(r.status, 0, 'rode "npm run formatar"\n' + r.stdout + r.stderr);
+  });
+
   test('Wake Lock: pedido ligado ao laço do anfitrião e refeito ao voltar para a aba', () => {
     assert.match(html, /navigator\.wakeLock\.request\('screen'\)/);
-    assert.match(html, /function stopLoop\(\)\{[^}]*wakeSync\(\)\}/);
+    assert.match(html, /function stopLoop\(\)\s*\{[^}]*wakeSync\(\)/);
     assert.match(html, /visibilitychange/);
   });
 
   test('histórico de palavras vistas é gravado no localStorage a cada rodada', () => {
-    assert.match(html, /SEEN_KEY='decifra\.seen'/);
+    assert.match(html, /SEEN_KEY\s*=\s*'decifra\.seen'/);
     assert.match(html, /seenAdd\(w\.t\)/);
   });
 });

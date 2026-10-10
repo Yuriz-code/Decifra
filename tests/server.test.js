@@ -34,7 +34,32 @@ describe('HTTP e arquivos do app (PWA)', () => {
     const html = r.body.toString();
     assert.match(html, /<title>Decifra/);
     assert.match(html, /window\.DECIFRA_WS=\(location\.protocol==='https:'\?'wss:\/\/':'ws:\/\/'\)\+location\.host;/);
-    assert.match(html, /<link rel="manifest" href="manifest\.webmanifest">/);
+    assert.match(html, /<link[^>]*rel="manifest"[^>]*href="manifest\.webmanifest"/);
+  });
+
+  test('o HTML é entregue comprimido (br/gzip) quando o navegador aceita, e idêntico ao original', async () => {
+    const zlib = require('node:zlib');
+    const get2 = (enc) => new Promise((res, rej) => require('node:http').get(srv.base + '/', { headers: enc ? { 'Accept-Encoding': enc } : {} }, r => {
+      const ch = []; r.on('data', c => ch.push(c)); r.on('end', () => res({ h: r.headers, b: Buffer.concat(ch) }));
+    }).on('error', rej));
+    const raw = await get2(null), gz = await get2('gzip'), br = await get2('gzip, br');
+    assert.equal(raw.h['content-encoding'], undefined);
+    assert.equal(gz.h['content-encoding'], 'gzip'); assert.equal(br.h['content-encoding'], 'br');
+    assert.equal(gz.h['vary'], 'Accept-Encoding');
+    assert.deepEqual(zlib.gunzipSync(gz.b), raw.b); assert.deepEqual(zlib.brotliDecompressSync(br.b), raw.b);
+    assert.ok(br.b.length < raw.b.length / 3, `br ${br.b.length} vs ${raw.b.length}`);
+    assert.equal(Number(gz.h['content-length']), gz.b.length);
+  });
+
+  test('fontes próprias são servidas com cache longo', async () => {
+    for (const f of ['fredoka-latin', 'nunito-latin']) {
+      const r = await get(srv.base, `/fonts/${f}.woff2`);
+      assert.equal(r.status, 200); assert.equal(r.headers['content-type'], 'font/woff2');
+      assert.match(r.headers['cache-control'], /immutable/);
+      assert.equal(r.body.subarray(0, 4).toString(), 'wOF2');
+    }
+    for (const bad of ['/fonts/x.ttf', '/fonts/..%2Fserver.js', '/fonts/sub/a.woff2', '/fonts/LICENSE-OFL.txt'])
+      assert.equal((await get(srv.base, bad)).status, 404, bad);
   });
 
   test('caminhos desconhecidos e tentativa de sair da pasta dão 404', async () => {
@@ -108,16 +133,41 @@ describe('salas e protocolo', () => {
     }
   });
 
-  test('só o anfitrião emite state/secret/msg/fx; jogador não consegue forjar', async () => {
-    const r = room(), host = await join(srv.port, r), guest = await join(srv.port, r);
-    for (const topic of ['state', 'secret', 'msg', 'fx']) {
+  test('só o anfitrião emite state/fx/secret/msg; jogador não consegue forjar', async () => {
+    const r = room(), host = await join(srv.port, r, { pid: 'h0' }), guest = await join(srv.port, r, { pid: 'g0' });
+    for (const topic of ['state', 'fx']) {
       guest.send({ t: 'ev', topic, data: { forjado: true } });
       host.send({ t: 'ev', topic, data: { ok: 1 } });
       const m = await guest.waitFor(x => x.t === 'ev' && x.topic === topic);
       assert.equal(m.by, host.id); assert.deepEqual(m.data, { ok: 1 });
     }
+    for (const topic of ['secret', 'msg']) {
+      guest.send({ t: 'ev', topic, data: { to: 'h0', forjado: true } });   // convidado tentando forjar mensagem privada
+      host.send({ t: 'ev', topic, data: { to: 'g0', ok: 1 } });
+      const m = await guest.waitFor(x => x.t === 'ev' && x.topic === topic);
+      assert.equal(m.by, host.id); assert.equal(m.data.ok, 1);
+    }
     await host.expectNone(m => m.t === 'ev' && m.topic !== 'act');
     host.close(); guest.close();
+  });
+
+  test('palavra secreta e mensagens privadas chegam SÓ ao destinatário (ninguém mais na sala as vê)', async () => {
+    const r = room();
+    const host = await join(srv.port, r, { pid: 'h1' }), giver = await join(srv.port, r, { pid: 'g1' }),
+      spy = await join(srv.port, r, { pid: 's1' });
+    for (const topic of ['secret', 'msg']) {
+      host.send({ t: 'ev', topic, data: { to: 'g1', w: 'ABACAXI', n: 3 } });
+      const m = await giver.waitFor(x => x.t === 'ev' && x.topic === topic);
+      assert.equal(m.data.w, 'ABACAXI'); assert.equal(m.by, host.id);
+    }
+    await spy.expectNone(m => m.t === 'ev' && (m.topic === 'secret' || m.topic === 'msg') || JSON.stringify(m).includes('ABACAXI'));
+    // sem destinatário, com destinatário inexistente ou malformado: descartada, nunca vira broadcast
+    const from = [giver.mark(), spy.mark()];
+    for (const data of [{ w: 'VAZOU' }, { to: 'ninguem', w: 'VAZOU' }, { to: 123, w: 'VAZOU' }, { to: '', w: 'VAZOU' }, 'VAZOU', null])
+      host.send({ t: 'ev', topic: 'secret', data });
+    await giver.expectNone(m => JSON.stringify(m).includes('VAZOU'), { from: from[0] });
+    await spy.expectNone(m => JSON.stringify(m).includes('VAZOU'), { from: from[1], ms: 150 });
+    host.close(); giver.close(); spy.close();
   });
 
   test('"act" funciona para qualquer jogador e tópicos desconhecidos são ignorados', async () => {

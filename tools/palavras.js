@@ -10,7 +10,9 @@ const INDEX = path.join(ROOT, 'public', 'index.html');
 const SRC = path.join(__dirname, 'palavras-brasil.txt');
 const BEGIN = '/* BEGIN PALAVRAS-BRASIL (gerado por tools/palavras.js — não edite aqui) */';
 const END = '/* END PALAVRAS-BRASIL */';
-const ANCHOR = 'CATS.forEach(c=>{c.w=c.w.concat(';
+/* Os padrões toleram o código formatado (Prettier) ou compacto. */
+const CATS_START = /const CATS\s*=\s*\[/;
+const ANCHOR = /CATS\.forEach\(\s*\(?c\)?\s*=>\s*\{\s*c\.w\s*=\s*c\.w\.concat\(/;
 
 const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
 const checkOnly = process.argv.includes('--check');
@@ -33,25 +35,24 @@ function parseSource(txt) {
 }
 
 /* ---------- carrega o banco que já existe no jogo ---------- */
-function loadExisting(html) {
-  const a = html.indexOf('const CATS=[');
-  if (a < 0) throw new Error('não achei "const CATS=[" em index.html');
-  let b = html.indexOf(BEGIN); if (b < 0) b = html.indexOf(ANCHOR);
+function bankRange(html) {
+  const a = html.search(CATS_START);
+  if (a < 0) throw new Error('não achei "const CATS = [" em index.html');
+  let b = html.indexOf(BEGIN); if (b < 0) b = html.search(ANCHOR);
   if (b < 0) throw new Error('não achei o ponto de injeção em index.html');
-  const code = html.slice(a, b) + ';return CATS;';
+  return [a, b];
+}
+/* executa o trecho original (CATS + EXTRA + pushes) e devolve as categorias com as palavras já juntadas */
+function loadExisting(html) {
+  const [a, b] = bankRange(html);
+  const code = html.slice(a, b) + ';CATS.forEach(c=>{c.w=c.w.concat((typeof EXTRA!=="undefined"&&EXTRA[c.id])||[])});return CATS;';
   return new Function(code)();
 }
 
 const html = fs.readFileSync(INDEX, 'utf8');
 const existing = loadExisting(html);
 const have = new Map(); // palavra normalizada -> categoria
-(function indexExisting() {
-  // as palavras originais vivem em c.w (CATS) e em EXTRA; o jogo junta os dois só depois, então relemos o texto
-  const re = /"([A-ZÀ-Ý0-9'&\- ]+)\|[123]\|/g; let m;
-  const a = html.indexOf('const CATS=['); let b = html.indexOf(BEGIN); if (b < 0) b = html.indexOf(ANCHOR);
-  const trecho = html.slice(a, b);
-  while ((m = re.exec(trecho))) have.set(norm(m[1]), 'banco original');
-})();
+existing.forEach(c => c.w.forEach(l => have.set(norm(l.split('|')[0]), 'banco original')));
 
 const { cats, erros } = parseSource(fs.readFileSync(SRC, 'utf8'));
 const ids = new Set(existing.map(c => c.id));
@@ -93,15 +94,27 @@ if (erros.length) {
   process.exit(1);
 }
 
-const bloco = BEGIN + '\n' + saida.map(c => `CATS.push(${JSON.stringify(c)});`).join('\n') + '\n' + END + '\n';
+const json = JSON.stringify(saida, null, 0);
+if (/[`\\]|\$\{/.test(json)) { console.error('✖ o banco tem crase, barra invertida ou ${ — remova (o bloco é gravado como template literal).'); process.exit(1); }
+const bloco = BEGIN + '\n' + 'CATS.push(...JSON.parse(`' + json + '`));\n' + END + '\n';
+/* o conteúdo (JSON) do bloco, ignorando como o Prettier quebrou as linhas ao redor */
+const payload = t => { const a = t.indexOf('`'), b = t.lastIndexOf('`'); return a >= 0 && b > a ? t.slice(a + 1, b) : null; };
 const a = html.indexOf(BEGIN), z = html.indexOf(END);
-let novo;
-if (a >= 0 && z >= 0) novo = html.slice(0, a) + bloco + html.slice(z + END.length).replace(/^\n/, '');
-else { const k = html.indexOf(ANCHOR); novo = html.slice(0, k) + bloco + html.slice(k); }
+const temBloco = a >= 0 && z >= 0;
+const emDia = temBloco && payload(html.slice(a, z)) === json;
 
 const base = [...have.values()].filter(v => v === 'banco original').length;
 console.log(`✔ ${saida.length} categorias novas, ${total} palavras novas (banco total: ${base + total}).`);
 if (checkOnly) {
-  if (novo !== html) { console.error('✖ index.html está desatualizado em relação a tools/palavras-brasil.txt — rode "npm run palavras".'); process.exit(1); }
-} else if (novo !== html) { fs.writeFileSync(INDEX, novo); console.log('index.html atualizado.'); }
-else console.log('index.html já estava em dia.');
+  if (!emDia) { console.error('✖ index.html está desatualizado em relação a tools/palavras-brasil.txt — rode "npm run palavras".'); process.exit(1); }
+} else if (emDia) console.log('index.html já estava em dia.');
+else {
+  const novo = temBloco ? html.slice(0, a) + bloco + html.slice(z + END.length).replace(/^\n/, '')
+                        : (k => html.slice(0, k) + bloco + html.slice(k))(html.search(ANCHOR));
+  fs.writeFileSync(INDEX, novo);
+  console.log('index.html atualizado.');
+  try {   // mantém o arquivo formatado
+    const r = require('child_process').spawnSync(process.execPath, [require.resolve('prettier/bin/prettier.cjs'), '--write', INDEX], { cwd: ROOT, encoding: 'utf8' });
+    console.log(r.status === 0 ? 'index.html formatado (Prettier).' : 'Aviso: o Prettier falhou; rode "npm run formatar".');
+  } catch (e) { console.log('Prettier não instalado; rode "npm install" e depois "npm run formatar".'); }
+}

@@ -165,3 +165,97 @@ test('PWA: manifesto, service worker ativo e cartão de instalação', async ({ 
     await expect(a.page.locator('.card', { hasText: 'Instalar como app' })).toBeVisible();
   } finally { await a.ctx.close(); }
 });
+
+test('palavra secreta chega só a quem dá as pistas: um terceiro navegador espiando o WebSocket não a vê', async ({ browser }) => {
+  const a = await novoJogador(browser), b = await novoJogador(browser), c = await novoJogador(browser);
+  const quadros = [];
+  c.page.on('websocket', ws => ws.on('framereceived', f => quadros.push(String(f.payload))));   // o "espião" (F12 → Rede → WS)
+  try {
+    const code = await criarSala(a.page, 'Ana');
+    await entrarNaSala(b.page, code, 'Bia');
+    await entrarNaSala(c.page, code, 'Caio');
+    await expect(a.page.locator('.board li')).toHaveCount(3);
+    await b.page.locator('[data-a="ready"]').click();
+    await c.page.locator('[data-a="ready"]').click();
+    await expect(a.page.locator('.board li', { hasText: 'Caio' })).toContainText('Pronto');
+    await expect(a.page.locator('.board li', { hasText: 'Bia' })).toContainText('Pronto');
+    await a.page.locator('[data-a="start"]').click();
+    await expect(c.page.locator('.gtop')).toContainText('Rodada 1');
+
+    // no modo Clássico a primeira dupla de pistas é do próprio anfitrião; passamos a vez para a Bia e reenviamos o segredo
+    const pidBia = await b.page.evaluate(() => ME.pid);
+    const { palavra, codificada } = await a.page.evaluate(pid => {
+      S.r.g = pid; secrets();
+      return { palavra: S.secret.word, codificada: enc(S.secret.word) };
+    }, pidBia);
+
+    await expect.poll(() => b.page.evaluate(() => NET.sec && NET.sec.w)).toBe(palavra);        // quem dá as pistas recebe
+    await expect.poll(() => c.page.evaluate(() => (NET.sec ? NET.sec.w : null))).toBeNull();   // o espião não
+    await c.page.waitForTimeout(1500);                                                          // dá tempo de novos quadros chegarem
+    expect(quadros.length).toBeGreaterThan(0);                                                  // o espião estava mesmo ouvindo
+    const tudo = quadros.join('\n');
+    expect(tudo).not.toContain(codificada);
+    expect(tudo).not.toContain('"topic":"secret"');
+  } finally { await a.ctx.close(); await b.ctx.close(); await c.ctx.close(); }
+});
+
+test('fontes vêm do próprio servidor e o PeerJS não é pedido quando há servidor de salas', async ({ browser }) => {
+  const a = await novoJogador(browser);
+  const urls = [];
+  a.page.on('request', r => urls.push(r.url()));
+  try {
+    await a.page.goto('/');
+    await a.page.evaluate(() => document.fonts.ready);
+    expect(urls.filter(u => /googleapis|gstatic|jsdelivr|peerjs/.test(u))).toEqual([]);
+    expect(urls.some(u => u.endsWith('/fonts/fredoka-latin.woff2'))).toBe(true);
+    const carregadas = await a.page.evaluate(() => [...document.fonts].filter(f => f.status === 'loaded').map(f => f.family.replace(/"/g, '')));
+    expect(carregadas).toEqual(expect.arrayContaining(['Fredoka', 'Nunito']));
+  } finally { await a.ctx.close(); }
+});
+
+test('Convidar: abre o compartilhar do celular com o link da sala', async ({ browser }) => {
+  const a = await novoJogador(browser);
+  await a.ctx.addInitScript(() => { navigator.share = async d => { window.__shared = d; }; });
+  try {
+    const code = await criarSala(a.page, 'Ana');
+    await a.page.locator('[data-a="invite"]').click();
+    const d = await a.page.evaluate(() => window.__shared);
+    expect(d.url).toBe(`http://127.0.0.1:3100/?sala=${code}`);
+    expect(d.text).toContain(code);
+    expect(d.title).toBe('Decifra!');
+  } finally { await a.ctx.close(); }
+});
+
+test('Convidar sem compartilhar nativo (computador): copia o convite com o link', async ({ browser }) => {
+  const a = await novoJogador(browser);
+  await a.ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'http://127.0.0.1:3100' });
+  await a.ctx.addInitScript(() => { Object.defineProperty(navigator, 'share', { value: undefined, configurable: true }); });
+  try {
+    const code = await criarSala(a.page, 'Ana');
+    await a.page.locator('[data-a="invite"]').click();
+    await expect(a.page.locator('#toasts .toast')).toContainText('Convite copiado');
+    const copiado = await a.page.evaluate(() => navigator.clipboard.readText());
+    expect(copiado).toContain(`http://127.0.0.1:3100/?sala=${code}`);
+  } finally { await a.ctx.close(); }
+});
+
+test('WhatsApp: abre wa.me com o convite escrito e o link abre a sala para o amigo', async ({ browser }) => {
+  const a = await novoJogador(browser), b = await novoJogador(browser);
+  await a.ctx.addInitScript(() => { window.open = (u, ...r) => { window.__aberto = { u, r }; return null; }; });
+  try {
+    const code = await criarSala(a.page, 'Ana');
+    await a.page.locator('[data-a="invwa"]').click();
+    const { u, r } = await a.page.evaluate(() => window.__aberto);
+    expect(u.startsWith('https://wa.me/?text=')).toBe(true);
+    const texto = decodeURIComponent(u.slice('https://wa.me/?text='.length));
+    expect(texto).toContain(code);
+    const link = texto.match(/https?:\/\/\S+/)[0];
+    expect(r).toContain('noopener');
+    // o link que iria na mensagem realmente leva o amigo à sala
+    await b.page.goto(link);
+    await expect(b.page.locator('#codein')).toHaveValue(code);
+    await b.page.locator('#myname').fill('Bia');
+    await b.page.locator('[data-a="join"]').click();
+    await expect(b.page.locator('.board')).toContainText('Ana');
+  } finally { await a.ctx.close(); await b.ctx.close(); }
+});

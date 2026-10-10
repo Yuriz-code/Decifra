@@ -1,0 +1,25 @@
+name: Manter o servidor acordado
+
+# O Render grátis dorme após ~15 min sem visitas e leva até 1 min para acordar.
+# Este aviso agendado chama /health a cada 10 min nos horários em que o jogo costuma ser usado:
+# 12h às 01h59 no horário de Brasília (o cron do GitHub usa UTC: 15h–04h59 UTC).
+# Fora desse período o servidor pode dormir, o que também poupa as 750 h grátis por mês do Render.
+#
+# Ativação: no GitHub, Settings → Secrets and variables → Actions → aba Variables → New repository variable
+#   Nome: RENDER_URL     Valor: https://SEU-APP.onrender.com   (sem barra no final)
+# Sem a variável, o job é ignorado.
+on:
+  schedule:
+    - cron: '*/10 0-4,15-23 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    if: ${{ vars.RENDER_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Chamar /health
+        env:
+          RENDER_URL: ${{ vars.RENDER_URL }}
+        run: curl -fsS --retry 3 --retry-delay 10 --max-time 90 "$RENDER_URL/health"

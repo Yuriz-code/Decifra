@@ -5,12 +5,14 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test tests/server.test.js tests/app.test.js",
+    "test": "node --test tests/server.test.js tests/app.test.js tests/sw.test.js",
     "test:e2e": "playwright test",
     "test:all": "npm test && npm run test:e2e",
     "palavras": "node tools/palavras.js",
     "palavras:check": "node tools/palavras.js --check",
-    "icones": "python3 tools/gerar-icones.py"
+    "icones": "python3 tools/gerar-icones.py",
+    "formatar": "prettier --write public/index.html",
+    "formatar:check": "prettier --check public/index.html"
   },
   "engines": {
     "node": ">=18"
@@ -19,6 +21,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.64.0"
+    "@playwright/test": "^1.64.0",
+    "prettier": "^3.9.9"
   }
 }

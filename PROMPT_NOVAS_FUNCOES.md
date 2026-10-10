@@ -46,3 +46,9 @@ Hospedagem: Render free (dorme sem tráfego). Público: amigos em redes diferent
 - Few-shot: inclua 1 exemplo de patch no formato desejado, por exemplo:
   `ANTES: toast('Sala cheia.','bad')` → `DEPOIS: toast('Sala cheia (máx. 12).','bad')`
 - Para novas palavras do banco, inclua 2–3 linhas reais no formato `PALAVRA|dificuldade|pista1|pista2|pista3` como exemplo.
+
+## Atualização do projeto (formatação e palavras)
+- `public/index.html` agora é formatado com Prettier (`npm run formatar`). Ao pedir patches, cole o trecho **atual** do arquivo: o texto antigo de `str_replace` precisa bater exatamente com ele.
+- Para palavras novas, edite `tools/palavras-brasil.txt` e rode `npm run palavras` (valida, injeta e formata). Não edite à mão o bloco entre `BEGIN/END PALAVRAS-BRASIL` no HTML.
+- Mensagens privadas (`secret`, `msg`) precisam de `data.to` (pid do destinatário); o servidor só as entrega a ele.
+- Rode `npm test` e `npm run test:e2e` antes de enviar.

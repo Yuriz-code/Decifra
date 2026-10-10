@@ -57,3 +57,26 @@ Enquanto o jogo roda no aparelho do anfitrião, ele pede à API Wake Lock para a
 
 ## Instalar como app (PWA)
 `public/manifest.webmanifest`, `public/sw.js` e `public/icons/*` são servidos pelo `server.js`. O jogo mostra o botão **Instalar app** (Chrome/Android) ou a instrução do iPhone (Compartilhar → Adicionar à Tela de Início). O service worker só acelera a abertura: o jogo continua precisando do servidor. Para trocar o ícone, edite `tools/gerar-icones.py`, rode `npm run icones` e aumente `VERSION` em `public/sw.js`.
+
+## Segurança da palavra secreta
+No modo Clássico, a palavra vai do anfitrião só para quem dá as pistas. O servidor entrega as mensagens `secret` e `msg` **apenas ao destinatário** (`data.to`); sem destinatário válido a mensagem é descartada, nunca retransmitida à sala. Há testes que simulam um jogador "espião" lendo o WebSocket. Limitação: no modo sem servidor (PeerJS, conexão direta entre aparelhos) não existe esse intermediário, então um jogador que mexa nas ferramentas do navegador ainda pode ver a palavra. O modo com servidor é o recomendado para jogar a sério.
+
+## Desempenho e manutenção
+- O servidor entrega o `index.html` comprimido (brotli/gzip): cerca de 60 KB na rede em vez de 206 KB.
+- As fontes (Fredoka e Nunito, licença OFL em `public/fonts/LICENSE-OFL.txt`) vêm do próprio servidor, sem Google Fonts. O PeerJS só é baixado se `DECIFRA_WS` estiver vazio (modo sem servidor).
+- O `index.html` é mantido formatado com Prettier: `npm run formatar` (e `npm run formatar:check`, que também roda em `npm test`). O `npm run palavras` já formata ao final.
+- Trocar fontes ou ícones: aumente `VERSION` em `public/sw.js` para o cache dos aparelhos renovar.
+
+## Render grátis dorme
+O plano grátis desliga o serviço após ~15 min sem visitas, e quem chega depois espera até 1 min. O que já está no projeto:
+- **Aviso agendado** (`.github/workflows/manter-acordado.yml`): chama `/health` a cada 10 min, das 12h à 01h59 (horário de Brasília). Para ativar: no GitHub, *Settings → Secrets and variables → Actions → Variables → New repository variable*, nome `RENDER_URL`, valor `https://SEU-APP.onrender.com`. Sem a variável, nada roda. Para mudar o horário, edite o `cron` (ele usa UTC: Brasília + 3 h).
+- **Quem já abriu o jogo antes** (inclusive o app instalado) vê a tela na hora: se o servidor não responde em 3 s, o service worker mostra a cópia guardada e o jogo avisa "Acordando o servidor…" enquanto conecta. A cópia se atualiza em segundo plano, então uma versão nova aparece no acesso seguinte.
+- O servidor também chama a si mesmo a cada 9 min enquanto houver sala aberta.
+
+Cuidados:
+- O Render dá 750 h grátis por mês **somando todos os serviços da conta**. Um único serviço ligado 24 h gasta ~744 h; por isso o aviso agendado cobre só 14 h por dia (~420 h/mês). Se você tem outro serviço grátis (por exemplo o Arena-quiz), não amplie o horário sem fazer essa conta.
+- O GitHub só garante os agendamentos "no melhor esforço" (podem atrasar alguns minutos) e, em repositório público, os desativa após 60 dias sem nenhuma atividade no repositório. Em repositório **privado**, cada execução gasta minutos do plano grátis (2000/mês) e esse horário passa disso; nesse caso prefira o UptimeRobot (grátis, intervalo de 5 min, apontando para `/health`).
+- Para o servidor nunca dormir, só um plano pago do Render resolve de verdade.
+
+## Convites
+Na sala há dois botões: **Convidar** (compartilhar do celular; no computador copia o texto com o link) e **WhatsApp** (abre o WhatsApp com o convite pronto). O link `?sala=CODIGO` já abre a tela de entrada com o código preenchido.

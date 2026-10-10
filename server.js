@@ -6,6 +6,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const zlib = require('zlib');
 const { WebSocketServer } = require('ws');
 
 /* ---------- configuração (variáveis de ambiente opcionais) ---------- */
@@ -24,6 +25,7 @@ const SELF_URL = process.env.RENDER_EXTERNAL_URL || process.env.SELF_URL || '';
 const ROOM_RE = /^decifra-[a-z0-9]{3,8}(-g\d{1,3})?$/i;
 const TOPICS = new Set(['act', 'fx', 'state', 'secret', 'msg']);
 const HOST_ONLY = new Set(['state', 'secret', 'msg', 'fx']);   // só o anfitrião pode emitir (impede forjar estado)
+const PRIVATE = new Set(['secret', 'msg']);                   // têm destinatário (data.to = pid): nunca são retransmitidas a todos
 const INDEX = path.join(__dirname, 'public', 'index.html');
 
 /* ---------- log estruturado + métricas ---------- */
@@ -35,12 +37,17 @@ process.on('unhandledRejection', e => log('unhandled', { err: String(e) }));
 
 /* ---------- HTTP ---------- */
 let htmlCache = null, htmlMtime = 0;
-function page() {
+function page() {   // devolve {raw, gz, br}: o HTML (~150 KB) é comprimido uma vez por versão do arquivo
   const st = fs.statSync(INDEX);
   if (!htmlCache || st.mtimeMs !== htmlMtime) {
     htmlMtime = st.mtimeMs;
-    htmlCache = fs.readFileSync(INDEX, 'utf8').replace(/window\.DECIFRA_WS\s*=\s*(['"])\1\s*;/,
-      "window.DECIFRA_WS=(location.protocol==='https:'?'wss://':'ws://')+location.host;");
+    const raw = Buffer.from(fs.readFileSync(INDEX, 'utf8').replace(/window\.DECIFRA_WS\s*=\s*(['"])\1\s*;/,
+      "window.DECIFRA_WS=(location.protocol==='https:'?'wss://':'ws://')+location.host;"), 'utf8');
+    htmlCache = {
+      raw,
+      gz: zlib.gzipSync(raw, { level: 9 }),
+      br: zlib.brotliCompressSync(raw, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 9 } })
+    };
   }
   return htmlCache;
 }
@@ -56,6 +63,7 @@ const STATIC = {
   '/sw.js': ['sw.js', 'text/javascript; charset=utf-8', 'no-cache', { 'Service-Worker-Allowed': '/' }]
 };
 const ICON_RE = /^\/icons\/[a-z0-9-]+\.png$/;
+const FONT_RE = /^\/fonts\/[a-z0-9-]+\.woff2$/;
 function sendStatic(res, file, type, cache, extra) {
   fs.readFile(path.join(PUB, file), (err, buf) => {
     if (err) { res.writeHead(404, SEC); return res.end('not found'); }
@@ -68,6 +76,7 @@ const server = http.createServer((req, res) => {
   const st = STATIC[url];
   if (st) return sendStatic(res, st[0], st[1], st[2], st[3]);
   if (ICON_RE.test(url)) return sendStatic(res, url.slice(1), 'image/png', 'public, max-age=86400');
+  if (FONT_RE.test(url)) return sendStatic(res, url.slice(1), 'font/woff2', 'public, max-age=31536000, immutable');
   if (url === '/health' || url === '/alive') {
     res.writeHead(200, Object.assign({ 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' }, SEC));
     return res.end('ok');
@@ -78,8 +87,12 @@ const server = http.createServer((req, res) => {
   }
   if (url === '/' || url === '/index.html') {
     try {
-      res.writeHead(200, Object.assign({ 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' }, SEC));
-      return res.end(page());
+      const pg = page(), ae = String(req.headers['accept-encoding'] || '');
+      const enc = /\bbr\b/.test(ae) ? 'br' : /\bgzip\b/.test(ae) ? 'gz' : 'raw', body = pg[enc];
+      const h = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Length': body.length };
+      if (enc !== 'raw') h['Content-Encoding'] = enc === 'br' ? 'br' : 'gzip';
+      res.writeHead(200, Object.assign(h, SEC));
+      return res.end(body);
     } catch (e) { res.writeHead(500); return res.end('index.html não encontrado em /public'); }
   }
   res.writeHead(404, SEC); res.end('not found');
@@ -224,6 +237,13 @@ wss.on('connection', (ws, req) => {
       if (typeof m.topic !== 'string' || !TOPICS.has(m.topic)) return;
       if (HOST_ONLY.has(m.topic) && room.hostId !== me.id) return;
       room.act = Date.now();
+      if (PRIVATE.has(m.topic)) {   // ex.: a palavra secreta vai só para quem dá as pistas, não para a sala inteira
+        const to = m.data && typeof m.data === 'object' ? m.data.to : null;
+        if (typeof to !== 'string' || !to) return;   // sem destinatário válido: descarta, jamais vira broadcast
+        const dest = live(room).find(p => p.id !== me.id && p.presence && p.presence.pid === to);
+        if (dest) send(dest.ws, { t: 'ev', topic: m.topic, data: m.data, by: me.id });
+        return;
+      }
       broadcast(room, { t: 'ev', topic: m.topic, data: m.data, by: me.id }, me.id);
       return;
     }
